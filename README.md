@@ -13,4 +13,4 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 - Measure intersection of clusters of fires in time.
 - Get areas with the most likelihood of fire.
 - Understand how climate variables (from Meteochile) affect the number of fires.
-- Build forecasting of number of fires based on climate variables.
+- Build a forecasting model for the number of fires based on climate variables.
