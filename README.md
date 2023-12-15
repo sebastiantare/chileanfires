@@ -4,7 +4,7 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 
 **Done:**
 - Generate clusters of fires by month.
-- Generate extract MBR and plot it.
+- Generate MBR out of clusters and plot it.
 
 ![Fires clusters MBR](https://github.com/sebastiantare/chileanfires/blob/main/MBR-fires.png?raw=true)
 
