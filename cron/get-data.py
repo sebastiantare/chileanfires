@@ -58,7 +58,7 @@ def call_api_and_save_csv(starting_date = None):
             csv_data = response.text
 
             if csv_data == 'Invalid MAP_KEY.':
-                return logging.info(f"{csv_data}, probably too many requests.")
+                return logging.info(f"{csv_data} -> Probably too many requests.")
 
             csv_filename = os.path.join(output_directory, f"dump.csv")
 

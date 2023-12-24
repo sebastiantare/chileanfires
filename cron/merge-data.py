@@ -27,6 +27,8 @@ def transformData(df, cols):
 
         # Drop and order columns
         new_data = new_data[cols]
+        # Remove low confidence data
+        new_data = new_data[~(new_data['confidence'] == 'l')]
 
         return new_data
     except Exception as e:
