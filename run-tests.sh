@@ -1,2 +1,3 @@
 cd fires-api
-python -m unittest tests.test_api
+export FLASK_APP=./fires-api/run.py
+conda run -n api python -m unittest tests.test_api

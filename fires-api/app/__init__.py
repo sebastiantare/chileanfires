@@ -3,7 +3,7 @@ from config import Config
 from core import limiter
 
 ### Remove for production
-debug_config = True
+debug_config = False
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -19,4 +19,4 @@ def create_app(config_class=Config):
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=debug_config)
+    app.run()
