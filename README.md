@@ -27,7 +27,7 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 
 **TODO:**
 
-- Filter nominal confidence data with high confidence data (used to make the clusters and MBR) to check more MBR intersections.
+- Setup dashboard to visualize active fires.
 - Get areas with the most likelihood of fire.
 - Understand how climate variables (from Meteochile) affect the number of fires.
 - Build a forecasting model for the number of fires based on climate variables.

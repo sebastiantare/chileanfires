@@ -3,56 +3,82 @@
 """
 
 import os
+import sys
 import logging
 import pandas as pd
 from datetime import datetime, timedelta
 from config_loader import load_config, load_secrets
 
-logging.basicConfig(level=logging.INFO)
+log_file = './logs/merge-data.log'
+logging.basicConfig(filename=log_file, encoding='utf-8', level=logging.INFO)
 
+def parse_time(value):
+    hours = value // 100
+    minutes = value % 100
+    return pd.to_timedelta(f"{hours} hours {minutes} minutes")
+
+def transformData(df, cols):
+    try:
+        new_data = df.copy()
+        # Preprocess some columns
+        new_data['acq_date'] = pd.to_datetime(new_data['acq_date'])
+        new_data['hour'] = new_data['acq_time'].apply(parse_time)
+        new_data['hour'] = new_data['hour'].dt.components.hours
+
+        # Drop and order columns
+        new_data = new_data[cols]
+
+        return new_data
+    except Exception as e:
+        logging.error(f"Error preprocessing new data {str(e)}")
+
+"""
+    call_api_and_save_csv
+        1) Reads parquet db file and new data csv.
+        2) Transforms new data to match db format.
+        3) Drops duplicates.
+        4) Concatenates them and overwrites old db.
+        5) Deletes new data csv.
+"""
 def call_api_and_save_csv():
     try:
         config = load_config()
-        secrets = load_secrets()
+        default_cols = ['latitude', 'longitude', 'scan', 'track', 'acq_date', 'acq_time', 'confidence', 'frp', 'daynight', 'hour']
+        db = pd.DataFrame(columns=default_cols)
 
         # Load files
         output_directory = config.get('File', 'output_directory')
         db_path = config.get('Database', 'db_path')
 
-        current_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        csv_filename = os.path.join(output_directory, f"api_data_{current_date}.csv")
+        csv_filename = os.path.join(output_directory, f"dump.csv")
+
         new_data = pd.read_csv(csv_filename)
 
         if os.path.exists(db_path):
-            db = pd.read_csv(db_path)
-        else:
-            db = pd.DataFrame(columns=new_data.columns)
+            db = pd.read_parquet(db_path)
+        old_len = len(db)
 
-        db.set_index(["acq_date", "acq_time"], inplace=True)
-        new_data.set_index(["acq_date", "acq_time"], inplace=True)
+        # Transform new data to match db format
+        new_data = transformData(new_data, db.columns)
 
-        db.sort_values(["acq_date", "acq_time"], inplace=True)
-        new_data.sort_values(["acq_date", "acq_time"], inplace=True)
+        # Merge db with the new data
+        merged_data = pd.concat([db, new_data], axis=0).drop_duplicates()
 
-        # Merge files with the updated data
-        merged_data = pd.concat([db, new_data]).drop_duplicates()
-
-        merged_data.reset_index(inplace=True)
-
-        columns = [
-            "country_id", "latitude", "longitude", "bright_ti4", "scan",
-            "track", "acq_date", "acq_time", "satellite", "instrument",
-            "confidence", "version", "bright_ti5", "frp", "daynight"
-        ]
-
-        merged_data = merged_data[columns]
+        new_len = len(merged_data)
 
         # Save DB csv file
-        merged_data.to_csv(db_path, index=False)
-        logging.info(f"Merged data saved to {db_path}")
+        merged_data.to_parquet(db_path, index=False)
+        logging.info(f"DB successfully overwritten to {db_path} with {new_len-old_len} new datapoints added.")
 
+        os.remove(csv_filename)
+        logging.info(f"Successfully removed file: {csv_filename}")
+
+    except FileNotFoundError:
+        logging.error(f"The file {csv_filename} does not exist.")
+    except PermissionError:
+        logging.error(f"You don't have permission to delete the file {csv_filename}.")
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {str(e)}")
+        logging.error(f"An error occurred: {str(e)}")
 
 
 if __name__ == "__main__":
