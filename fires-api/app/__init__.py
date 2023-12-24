@@ -1,12 +1,14 @@
 from flask import Flask
 from config import Config
 from core import limiter
+from flask_cors import CORS
 
 ### Remove for production
 debug_config = False
 
 def create_app(config_class=Config):
     app = Flask(__name__)
+    CORS(app)
     limiter.init_app(app)
 
     app.config.from_object(config_class)
