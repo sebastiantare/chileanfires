@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#export FLASK_APP=./fires-api/run.py
-#conda run -n api flask run
+# For start on boot, use serve.sh instead.
 
 cd fires-api
 conda run -n api gunicorn --config gunicorn_config.py run:app
