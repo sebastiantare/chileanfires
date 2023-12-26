@@ -10,7 +10,7 @@
 
 In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/firms) to understand which places have the most likelihood to catch on fire.
 
-# Tasks
+## Project Progression ![](https://geps.dev/progress/50)
 
 ## What's already Done
 - Generate clusters of fires grouped by time.
