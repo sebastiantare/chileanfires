@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from config_loader import load_config, load_secrets
 import subprocess
 
-log_file = '/root/chileanfires/fires-api/cron/logs/update-to_now.log'
+log_file = '/logs/update-to_now.log'
 logging.basicConfig(filename=log_file, encoding='utf-8', level=logging.INFO)
 
 def getStartEndDate():
@@ -61,17 +61,19 @@ def update_from_last_date():
     try:
         start_date, end_date = getStartEndDate()
 
-        # Get new data until we reach now date
-        while start_date != end_date:
-            s, e = getStartEndDate()
-            start_date = s
+        # Get new data until we reach today's date
+        while start_date < end_date and start_date < datetime.now().strftime('%Y-%m-%d'):
             invokeGetDate()
-            sleep(60)
+            sleep(2)
+            start_date, end_date = getStartEndDate()
 
         logging.info("Done...")
 
     except Exception as e:
         logging.error(f"An unexpected error occurred: {str(e)}")
+
+if __name__ == "__main__":
+    update_from_last_date()
 
 if __name__ == "__main__":
     update_from_last_date()
