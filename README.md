@@ -10,7 +10,9 @@
 
 In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/firms) to understand which places have the most likelihood to catch on fire.
 
-## Done
+# Tasks
+
+## What's already Done
 - Generate clusters of fires grouped by time.
   
 [great-fire2017.webm](https://github.com/sebastiantare/chileanfires/assets/106767449/1c7a7a55-a0a7-4444-92a1-b9a818edb293)
