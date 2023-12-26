@@ -21,14 +21,19 @@ def transformData(df, cols):
     try:
         new_data = df.copy()
         # Preprocess some columns
-        new_data['acq_date'] = pd.to_datetime(new_data['acq_date'])
+        new_data['acq_date'] = pd.to_datetime(new_data['acq_date']).astype('datetime64[us]')
         new_data['hour'] = new_data['acq_time'].apply(parse_time)
         new_data['hour'] = new_data['hour'].dt.components.hours
 
+        logging.info(f"Transform Hour: Done. Shape {new_data.shape}")
+
         # Drop and order columns
         new_data = new_data[cols]
+        logging.info(f"Filter Columns: Done. Shape {new_data.shape}")
+
         # Remove low confidence data
         new_data = new_data[~(new_data['confidence'] == 'l')]
+        logging.info(f"Filter low confidence: Done. Shape {new_data.shape}")
 
         return new_data
     except Exception as e:
@@ -45,7 +50,7 @@ def transformData(df, cols):
 def call_api_and_save_csv():
     try:
         config = load_config()
-        default_cols = ['latitude', 'longitude', 'scan', 'track', 'acq_date', 'acq_time', 'confidence', 'frp', 'daynight', 'hour']
+        default_cols = ['latitude', 'longitude', 'scan', 'track', 'acq_date', 'acq_time', 'confidence', 'frp', 'daynight', 'hour'] 
         db = pd.DataFrame(columns=default_cols)
 
         # Load files
@@ -56,15 +61,29 @@ def call_api_and_save_csv():
 
         new_data = pd.read_csv(csv_filename)
 
+        logging.info(f"New Data Size {new_data.shape}")
+
         if os.path.exists(db_path):
             db = pd.read_parquet(db_path)
         old_len = len(db)
 
+        logging.info(f"DB Data Size {db.shape}")
+
         # Transform new data to match db format
-        new_data = transformData(new_data, db.columns)
+        new_data_transformed = transformData(new_data, db.columns)
+
+        if not db.columns.equals(new_data_transformed.columns):
+            logging.error("Columns of DataFrames do not match. Aborting concatenation.")
+            return
 
         # Merge db with the new data
-        merged_data = pd.concat([db, new_data], axis=0).drop_duplicates()
+        logging.info(f"Concatenating: {db.shape} and {new_data_transformed.shape}")
+        merged_data = pd.concat([db, new_data_transformed], axis=0)
+
+        logging.info(f"Removing duplicates.")
+        merged_data.drop_duplicates(inplace=True)
+
+        logging.info(f"Merged Data Size {len(merged_data)}")
 
         new_len = len(merged_data)
 
