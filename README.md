@@ -2,7 +2,8 @@
 
 <div align="center">
 <pre>
-  Backend for the Chilean Fires Dashboard.
+  <b>Objective</b>
+  <p>Estimate and plot areas with the most likelihood of fires in Chile.</p>
 </pre>
 
 </div>
@@ -22,7 +23,7 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 
 ![image](https://github.com/sebastiantare/chileanfires/assets/106767449/20d75a46-d768-445e-b35a-35026c41754e)
 
-- Dashboard to visualize fires.
+- Backend to 
 
 ![image](https://github.com/sebastiantare/chileanfires/assets/106767449/72c3f9bd-f868-480e-aeb2-813dee8452d3)
 
