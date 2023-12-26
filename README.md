@@ -1,8 +1,15 @@
 # 🔥🔥🔥 Chilean Fires Analysis 🔥🔥🔥
 
+<div align="center">
+<pre>
+  Backend for the Chilean Fires Dashboard.
+</pre>
+
+</div>
+
 In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/firms) to understand which places have the most likelihood to catch on fire.
 
-**Done:**
+## Done
 - Generate clusters of fires grouped by time.
   
 [great-fire2017.webm](https://github.com/sebastiantare/chileanfires/assets/106767449/1c7a7a55-a0a7-4444-92a1-b9a818edb293)
@@ -15,19 +22,24 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 
 ![image](https://github.com/sebastiantare/chileanfires/assets/106767449/20d75a46-d768-445e-b35a-35026c41754e)
 
-    The mean time is 303.95 days between fire MBR overlapping.
-    The median time is 2.0 days between fire MBR overlapping.
-    The standard deviation is 572.5 days between fire MBR overlapping.
-    The most common time is 1 days (most repeated).
-    The 50 percentile is 2.0 days.
-    The 75 percentile is 412.5 days.
-    The 80 percentile is 744.0 days.
-    The 85 percentile is 829.8 days.
+- Dashboard to visualize fires.
+
+![image](https://github.com/sebastiantare/chileanfires/assets/106767449/72c3f9bd-f868-480e-aeb2-813dee8452d3)
 
 
-**TODO:**
 
-- Setup dashboard to visualize active fires.
-- Get areas with the most likelihood of fire.
+## TODO
+
 - Understand how climate variables (from Meteochile) affect the number of fires.
 - Build a forecasting model for the number of fires based on climate variables.
+- Get areas with the most likelihood of fire.
+- Plot areas with the highest likelihood of fires in the Dashboard.
+
+
+## Contributing
+
+1. Fork it (<https://github.com/sebastiantare/chileanfires/fork>)
+2. Create your feature branch (`git checkout -b feature/newFeature`)
+3. Commit your changes (`git commit -am 'Fixed new feature'`)
+4. Push to the branch (`git push origin feature/newFeature`)
+5. Create a new Pull Request
