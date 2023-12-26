@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from config_loader import load_config, load_secrets
 import subprocess
 
-log_file = '/logs/update-to_now.log'
+log_file = './logs/update-to_now.log'
 logging.basicConfig(filename=log_file, encoding='utf-8', level=logging.INFO)
 
 def getStartEndDate():
