@@ -1,7 +1,10 @@
+import os
 import configparser
 
-config_path = 'config.ini'
-secret_path = '../secrets.ini'
+script_dir = os.path.dirname(os.path.abspath(__name__))
+
+config_path = os.path.join(script_dir, 'config.ini')
+secret_path = os.path.join(script_dir, '../secrets.ini')
 
 def load_config():
     config = configparser.ConfigParser()

@@ -1,2 +1,4 @@
+#!/bin/bash
+source /root/miniconda3/bin/activate api
 cd /root/chileanfires/cron
-conda run -n api python get-data.py
+/root/miniconda3/envs/api/bin/python /root/chileanfires/cron/get-data.py
