@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo "Setting up DEV=$DEV..."
+
+# Env vars
+source set-env-vars.sh
+
 USERNAME=$(whoami)
 GROUPNAME=$(id -gn)
 CONDA_ENV_NAME="api"

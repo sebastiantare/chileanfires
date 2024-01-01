@@ -9,7 +9,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 from config_loader import load_config, load_secrets
 
-log_file = '/root/chileanfires/cron/logs/merge-data.log'
+api_src = os.environ.get('API_SRC')
+log_file = api_src + '/cron/logs/merge-data.log'
 logging.basicConfig(filename=log_file, encoding='utf-8', level=logging.INFO)
 
 def parse_time(value):

@@ -1,6 +1,7 @@
 #!/bin/bash
+source set-env-vars.sh
 
-# For start on boot, use serve.sh instead.
+echo "Starting with DEV=$DEV..."
 
-cd fires-api
-conda run -n api gunicorn --config gunicorn_config.py run:app
+cd $API_SRC/fires-api
+conda run -n api gunicorn --config gunicorn_config.py run:app --log-level=debug

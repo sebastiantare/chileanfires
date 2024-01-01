@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Env vars
+source set-env-vars.sh
+
 # Get the current username and groupname
 USERNAME=$(whoami)
 GROUPNAME=$(id -gn)
