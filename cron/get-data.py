@@ -8,6 +8,7 @@ import logging
 import pandas as pd
 import requests
 import configparser
+from time import sleep
 from datetime import datetime, timedelta
 from config_loader import load_config, load_secrets
 
@@ -48,26 +49,34 @@ def call_api_and_save_csv(starting_date = None):
 
         logging.info(f"Requesting data with the following parameters Date={current_date}")
 
-        api_url = config.get('API', 'api_template').format(api_key=api_key, date=current_date)
-        output_directory = config.get('File', 'output_directory')
-        request_url = base_url + api_url
+        api_url_snpp = config.get('API', 'api_template_snpp').format(api_key=api_key, date=current_date)
+        api_url_modis = config.get('API', 'api_template_modis').format(api_key=api_key, date=current_date)
+        api_url_noaa20 = config.get('API', 'api_template_noaa20').format(api_key=api_key, date=current_date)
 
-        # Get & save data
-        response = requests.get(request_url)
+        urls = [api_url_snpp, api_url_modis, api_url_noaa20]
 
-        if response.status_code == 200:
-            csv_data = response.text
+        for i, url in enumerate(urls):
+            output_directory = config.get('File', 'output_directory')
+            request_url = base_url + url
 
-            if csv_data == 'Invalid MAP_KEY.':
-                return logging.info(f"{csv_data} -> Probably too many requests.")
+            # Get & save data
+            response = requests.get(request_url)
 
-            csv_filename = os.path.join(output_directory, f"dump.csv")
+            if response.status_code == 200:
+                csv_data = response.text
 
-            with open(csv_filename, 'w', newline='') as csv_file:
-                csv_file.write(csv_data)
-            logging.info(f"CSV data saved to {csv_filename}")
-        else:
-            logging.error(f"API request failed with status code {response.status_code}")
+                if csv_data == 'Invalid MAP_KEY.':
+                    return logging.info(f"{csv_data} -> Probably too many requests.")
+
+                csv_filename = os.path.join(output_directory, f"dump_{i}.csv")
+
+                with open(csv_filename, 'w', newline='') as csv_file:
+                    csv_file.write(csv_data)
+                logging.info(f"CSV data saved to {csv_filename}")
+            else:
+                logging.error(f"API request failed with status code {response.status_code}")
+            sleep(2)
+            
 
     except configparser.Error as e:
         logging.error(f"Error reading configuration: {str(e)}")
