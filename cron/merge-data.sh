@@ -12,5 +12,5 @@ if [ -z "$CONDA_SRC" ]; then
 fi
 
 source $CONDA_SRC/bin/activate api
-cd $API_SRC/chileanfires/cron
-$CONDA_SRC/envs/api/bin/python $API_SRC/chileanfires/cron/merge-data.py
+cd $API_SRC/cron
+$CONDA_SRC/envs/api/bin/python $API_SRC/cron/merge-data.py

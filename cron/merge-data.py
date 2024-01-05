@@ -59,9 +59,7 @@ def call_api_and_save_csv():
         db_path = config.get('Database', 'db_path')
 
         csv_filename = os.path.join(output_directory, f"dump.csv")
-
         new_data = pd.read_csv(csv_filename)
-
         logging.info(f"New Data Size {new_data.shape}")
 
         if os.path.exists(db_path):

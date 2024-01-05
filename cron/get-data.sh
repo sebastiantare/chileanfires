@@ -11,6 +11,6 @@ if [ -z "$CONDA_SRC" ]; then
     exit 1
 fi
 
-source $API_SRC/miniconda3/bin/activate api
-cd $API_SRC/chileanfires/cron
-$CONDA_SRC/envs/api/bin/python $API_SRC/chileanfires/cron/get-data.py
+source $CONDA_SRC/bin/activate api
+cd $API_SRC/cron
+$CONDA_SRC/envs/api/bin/python $API_SRC/cron/get-data.py
