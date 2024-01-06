@@ -8,6 +8,14 @@ df = pd.read_parquet(parquet_file_path)
 
 df['acq_date'] = pd.to_datetime(df['acq_date'])
 
+# Make type null values -1
+df['type'] = df['type'].fillna(-1)
+
+# Delete previous wildfires
+Wildfires.objects.all().delete()
+
+# Populate database
+
 wildfires_list = []
 for index, row in df.iterrows():
     wildfire = Wildfires(
@@ -25,7 +33,7 @@ for index, row in df.iterrows():
         bright_t31=row['bright_t31'],
         frp=row['frp'],
         daynight=row['daynight'],
-        type=row['type']
+        ftype=row['type']
     )
     wildfires_list.append(wildfire)
 

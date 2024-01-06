@@ -44,8 +44,8 @@ class Wildfires(models.Model):
     bright_t31 = models.FloatField()
     frp = models.FloatField()
     daynight = models.CharField(max_length=255)
-    # Assuming type can be nullable
-    type = models.FloatField(null=True, blank=True)
+    #type is reserved
+    ftype = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f"Wildfire at \

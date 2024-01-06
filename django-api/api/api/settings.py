@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_crontab',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -38,7 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'wildfiresapi',
-    'rest_framework'
+    'rest_framework',
+]
+
+CRONJOBS = [
+    ('*/5 * * * *', 'wildfiresapi.cron_job.insert_data'),  # Runs every 5 minutes
 ]
 
 MIDDLEWARE = [
@@ -88,7 +93,6 @@ DATABASES = {
         'HOST': 'localhost'
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
