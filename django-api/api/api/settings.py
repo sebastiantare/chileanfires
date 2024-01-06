@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,13 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-#)rw1doz3_bxwazow6_wbh%6f1^l)t^26l4t*5ere(d42!x51t"
+SECRET_KEY = config('SECRET_KEY')
+# MAPBOX_TOKEN = config('MAPBOX_TOKEN')
+NASA_FIRMS_TOKEN = config('NASA_FIRMS_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -40,10 +42,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'wildfiresapi',
     'rest_framework',
-]
+    'django_extensions',
+] 
 
+# Add a cron job with args and log to file
 CRONJOBS = [
-    ('*/5 * * * *', 'wildfiresapi.cron_job.insert_data'),  # Runs every 5 minutes
+    ('*/10 * * * *', 'wildfiresapi.cron_job.get_data', [f'{BASE_DIR}', f'{NASA_FIRMS_TOKEN}']),
 ]
 
 MIDDLEWARE = [

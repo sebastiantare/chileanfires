@@ -1,0 +1,21 @@
+INFO:root:Requesting data with the following parameters Date=2024-01-02
+INFO:root:CSV data saved to /home/stare/Development/chileanfires/django-api/api/dump/dump_0.csv
+INFO:root:CSV data saved to /home/stare/Development/chileanfires/django-api/api/dump/dump_1.csv
+INFO:root:CSV data saved to /home/stare/Development/chileanfires/django-api/api/dump/dump_2.csv
+INFO:root:New Data Size (149, 15)
+INFO:root:Transform Hour: Done. Shape (149, 14)
+INFO:root:Concatenate: Done. Shape (149, 14)
+INFO:root:Successfully removed file: /home/stare/Development/chileanfires/django-api/api/dump/dump_0.csv
+INFO:root:New Data Size (76, 15)
+INFO:root:Transform Hour: Done. Shape (76, 14)
+INFO:root:Concatenate: Done. Shape (225, 14)
+INFO:root:Successfully removed file: /home/stare/Development/chileanfires/django-api/api/dump/dump_1.csv
+INFO:root:New Data Size (360, 15)
+INFO:root:Transform Hour: Done. Shape (360, 14)
+INFO:root:Concatenate: Done. Shape (585, 14)
+INFO:root:Successfully removed file: /home/stare/Development/chileanfires/django-api/api/dump/dump_2.csv
+INFO:root:Saving to csv: /home/stare/Development/chileanfires/django-api/api/dump/dump.csv
+INFO:root:Rows to insert 585
+INFO:root:Filtered rows to insert 585
+INFO:root:File '/home/stare/Development/chileanfires/django-api/api/dump/dump.csv' deleted successfully.
+INFO:root:Data inserted successfully.
