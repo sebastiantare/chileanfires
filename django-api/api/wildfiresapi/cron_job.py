@@ -185,16 +185,6 @@ def get_data(*job_args, **job_kwargs):
 
             logging.info(f"Rows to insert {df.shape[0]}")
 
-            # Filter out duplicates
-            df = df[~(
-                (df['latitude'].isin(list(Wildfires.objects.values_list('latitude', flat=True)))) &
-                (df['longitude'].isin(list(Wildfires.objects.values_list('longitude', flat=True)))) &
-                (df['acq_date'].isin(
-                    list(Wildfires.objects.values_list('acq_date', flat=True))))
-            )]
-
-            logging.info(f"Filtered rows to insert {df.shape[0]}")
-
             if df.shape[0] == 0:
                 logging.info("No new data to insert.")
                 return
@@ -202,6 +192,10 @@ def get_data(*job_args, **job_kwargs):
             wildfires_list = []
 
             for index, row in df.iterrows():
+
+                if Wildfires.objects.filter(latitude=row['latitude'], longitude=row['longitude'], acq_date=row['acq_date'], acq_time=row['acq_time']).exists():
+                    continue
+
                 wildfire = Wildfires(
                     latitude=row['latitude'],
                     longitude=row['longitude'],
@@ -217,10 +211,11 @@ def get_data(*job_args, **job_kwargs):
                     bright_t31=row['bright_t31'],
                     frp=row['frp'],
                     daynight=row['daynight']
-                    #type doesn't come in the api requests
+                    #type
                 )
                 wildfires_list.append(wildfire)
 
+            logging.info(f"Rows to insert after filtering {len(wildfires_list)}")
             Wildfires.objects.bulk_create(wildfires_list)
             success = True
         except Exception as e:
