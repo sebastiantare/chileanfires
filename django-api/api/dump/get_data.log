@@ -628,3 +628,45 @@ INFO:root:Rows to insert 92
 INFO:root:Rows to insert after filtering 0
 INFO:root:File '/home/stare/Development/chileanfires/django-api/api/dump/dump.csv' deleted successfully.
 INFO:root:Data inserted successfully.
+INFO:root:Requesting data with the following parameters Date=2024-01-06
+INFO:root:CSV data saved to /root/chileanfires/django-api/api/dump/dump_0.csv
+INFO:root:CSV data saved to /root/chileanfires/django-api/api/dump/dump_1.csv
+INFO:root:CSV data saved to /root/chileanfires/django-api/api/dump/dump_2.csv
+INFO:root:New Data Size (56, 15)
+INFO:root:Transform Hour: Done. Shape (56, 14)
+INFO:root:Concatenate: Done. Shape (56, 14)
+INFO:root:Successfully removed file: /root/chileanfires/django-api/api/dump/dump_0.csv
+INFO:root:New Data Size (9, 15)
+INFO:root:Transform Hour: Done. Shape (9, 14)
+INFO:root:Concatenate: Done. Shape (65, 14)
+INFO:root:Successfully removed file: /root/chileanfires/django-api/api/dump/dump_1.csv
+INFO:root:New Data Size (27, 15)
+INFO:root:Transform Hour: Done. Shape (27, 14)
+INFO:root:Concatenate: Done. Shape (92, 14)
+INFO:root:Successfully removed file: /root/chileanfires/django-api/api/dump/dump_2.csv
+INFO:root:Saving to csv: /root/chileanfires/django-api/api/dump/dump.csv
+INFO:root:Rows to insert 92
+INFO:root:Rows to insert after filtering 92
+INFO:root:File '/root/chileanfires/django-api/api/dump/dump.csv' deleted successfully.
+INFO:root:Data inserted successfully.
+INFO:root:Requesting data with the following parameters Date=2024-01-06
+INFO:root:CSV data saved to /root/chileanfires/django-api/api/dump/dump_0.csv
+INFO:root:CSV data saved to /root/chileanfires/django-api/api/dump/dump_1.csv
+INFO:root:CSV data saved to /root/chileanfires/django-api/api/dump/dump_2.csv
+INFO:root:New Data Size (56, 15)
+INFO:root:Transform Hour: Done. Shape (56, 14)
+INFO:root:Concatenate: Done. Shape (56, 14)
+INFO:root:Successfully removed file: /root/chileanfires/django-api/api/dump/dump_0.csv
+INFO:root:New Data Size (9, 15)
+INFO:root:Transform Hour: Done. Shape (9, 14)
+INFO:root:Concatenate: Done. Shape (65, 14)
+INFO:root:Successfully removed file: /root/chileanfires/django-api/api/dump/dump_1.csv
+INFO:root:New Data Size (27, 15)
+INFO:root:Transform Hour: Done. Shape (27, 14)
+INFO:root:Concatenate: Done. Shape (92, 14)
+INFO:root:Successfully removed file: /root/chileanfires/django-api/api/dump/dump_2.csv
+INFO:root:Saving to csv: /root/chileanfires/django-api/api/dump/dump.csv
+INFO:root:Rows to insert 92
+INFO:root:Rows to insert after filtering 0
+INFO:root:File '/root/chileanfires/django-api/api/dump/dump.csv' deleted successfully.
+INFO:root:Data inserted successfully.

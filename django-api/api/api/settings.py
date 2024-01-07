@@ -27,10 +27,10 @@ SECRET_KEY = config('SECRET_KEY')
 NASA_FIRMS_TOKEN = config('NASA_FIRMS_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ['DEV'] == 'true'
+DEBUG = False
 
 # Add your domain(s) to ALLOWED_HOSTS
-ALLOWED_HOSTS = ['incendioschile.online', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['incendioschile.online', 'localhost', '127.0.0.1', 'sebastiantare.xyz']
 
 
 # Application definition
@@ -98,17 +98,17 @@ WSGI_APPLICATION = "api.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    # "default": {
-    #    "ENGINE": "django.db.backends.sqlite3",
-    #    "NAME": BASE_DIR / "db.sqlite3",
-    # }
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'wildfiresDB',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost'
-    }
+     "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+     }
+    #'default': {
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': 'wildfiresdb',
+#        'USER': 'postgres',
+#        'PASSWORD': 'postgres',
+#        'HOST': 'localhost'
+#    }
 }
 
 # Password validation
@@ -153,20 +153,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # EXTRA
 
-# If debug is false, use this
-if not DEBUG:
-    # Set SECURE_HSTS_SECONDS to a suitable value, for example, 31536000 seconds (1 year)
-    SECURE_HSTS_SECONDS = 31536000
+# Set SECURE_HSTS_SECONDS to a suitable value, for example, 31536000 seconds (1 year)
+SECURE_HSTS_SECONDS = 31536000
 
-    # Optionally, you can also set the following to instruct browsers to include subdomains:
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# Optionally, you can also set the following to instruct browsers to include subdomain
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
-    # Make sure to use HTTPS for all requests, not just the ones that are secure
-    SECURE_HSTS_PRELOAD = True
+# Make sure to use HTTPS for all requests, not just the ones that are secure
+SECURE_HSTS_PRELOAD = True
 
-    # The directive instructs browsers to upgrade all requests to HTTPS
-    SECURE_SSL_REDIRECT = True
+# The directive instructs browsers to upgrade all requests to HTTPS
+#SECURE_SSL_REDIRECT = True
 
-    SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
-    CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
