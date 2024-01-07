@@ -29,6 +29,10 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 
 ![image](https://github.com/sebastiantare/chileanfires/assets/106767449/72c3f9bd-f868-480e-aeb2-813dee8452d3)
 
+- More data sources added from 2 more satellites.
+- Updated UI with the new version with Tailwind.
+
+  ![image](https://github.com/sebastiantare/chileanfires/assets/106767449/fc214feb-1459-45f0-ae42-b5e476fa454e)
 
 
 ## TODO
