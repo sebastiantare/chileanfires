@@ -66,7 +66,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "htpps://incendioschile.online",
+    "https://incendioschile.online",
     "https://sebastiantare.xyz",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
@@ -157,14 +157,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SECURE_HSTS_SECONDS = 31536000
 
 # Optionally, you can also set the following to instruct browsers to include subdomain
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+#SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # Make sure to use HTTPS for all requests, not just the ones that are secure
-SECURE_HSTS_PRELOAD = True
+#SECURE_HSTS_PRELOAD = True
 
 # The directive instructs browsers to upgrade all requests to HTTPS
 #SECURE_SSL_REDIRECT = True
 
-SESSION_COOKIE_SECURE = True
+#SESSION_COOKIE_SECURE = True
 
-CSRF_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True
