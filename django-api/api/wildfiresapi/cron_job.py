@@ -159,6 +159,28 @@ def get_data(*job_args, **job_kwargs):
         # merged_data.reset_index(drop=True, inplace=True)
         # logging.info(f"Drop Duplicates: Done. Shape {merged_data.shape}")
 
+        # Page 51 https://modis-fire.umd.edu/files/MODIS_C6_C6.1_Fire_User_Guide_1.0.pdf
+        def convert_confidence(confidence):
+            # Check if confidence is not a number
+            if confidence == 'l':
+                return 'l'
+            elif confidence == 'n':
+                return 'n'
+            elif confidence == 'h':
+                return 'h'
+            
+            confidence_val = int(confidence)
+
+            if confidence_val >= 80:
+                return 'h'
+            elif 30 <= confidence_val < 80:
+                return 'n'
+            else:
+                return 'l'
+            
+        merged_data['confidence'] = merged_data['confidence'].apply(convert_confidence)
+        merged_data['confidence'] = merged_data['confidence'].astype(str)
+
         # Save to csv
         csv_filename = os.path.join(output_directory, f"dump.csv")
         merged_data.to_csv(csv_filename, index=False)

@@ -2,3 +2,4 @@ token.txt
 secrets.ini
 cron/logs/*
 .env
+old

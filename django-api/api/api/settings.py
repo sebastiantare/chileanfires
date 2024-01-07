@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,9 +27,11 @@ SECRET_KEY = config('SECRET_KEY')
 NASA_FIRMS_TOKEN = config('NASA_FIRMS_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ['DEV'] == 'True'
 
-ALLOWED_HOSTS = []
+# Add your domain(s) to ALLOWED_HOSTS
+ALLOWED_HOSTS = ['incendioschile.online', 'localhost', '127.0.0.1']
+
 
 # Application definition
 
@@ -43,6 +46,7 @@ INSTALLED_APPS = [
     'wildfiresapi',
     'rest_framework',
     'django_extensions',
+    'corsheaders',
 ] 
 
 # Add a cron job with args and log to file
@@ -53,11 +57,20 @@ CRONJOBS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "htpps://incendioschile.online",
+    "https://sebastiantare.xyz",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://localhost:1234",
 ]
 
 ROOT_URLCONF = "api.urls"
@@ -128,7 +141,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
@@ -138,3 +150,23 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# EXTRA
+
+# If debug is false, use this
+if not DEBUG:
+    # Set SECURE_HSTS_SECONDS to a suitable value, for example, 31536000 seconds (1 year)
+    SECURE_HSTS_SECONDS = 31536000
+
+    # Optionally, you can also set the following to instruct browsers to include subdomains:
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+    # Make sure to use HTTPS for all requests, not just the ones that are secure
+    SECURE_HSTS_PRELOAD = True
+
+    # The directive instructs browsers to upgrade all requests to HTTPS
+    SECURE_SSL_REDIRECT = True
+
+    SESSION_COOKIE_SECURE = True
+
+    CSRF_COOKIE_SECURE = True

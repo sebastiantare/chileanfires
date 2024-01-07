@@ -38,6 +38,12 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 - Get areas with the most likelihood of fire.
 - Plot areas with the highest likelihood of fires in the Dashboard.
 
+## Install
+
+- Python 3.10
+- PostgreSQL
+- Conda
+- Git
 
 ## Contributing
 

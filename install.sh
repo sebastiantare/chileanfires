@@ -1,16 +1,38 @@
 #!/bin/bash
 
-# Install redis
-sudo apt install lsb-release curl gpg -y
-curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
 sudo apt-get update
-sudo apt-get install redis -y
 
-# Install conda
-cd ~
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
+# Check if Python 3 is installed
+if ! command -v python3 &> /dev/null
+then
+    echo "Python 3 could not be found. Installing Python 3..."
+    sudo apt-get install python3 python3-pip -y
+fi
 
-# Install env
+# Check if conda is installed
+if ! command -v conda &> /dev/null
+then
+    echo "Conda could not be found. Installing Conda..."
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    bash miniconda.sh -b -p $HOME/miniconda
+    echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+fi
+
+# Create Conda environment
 conda env create -f environment.yml
+conda activate api
+
+# Install Python packages
+pip install -r requirements.txt
+
+# Install PostgreSQL
+sudo apt-get install postgresql postgresql-contrib -y
+
+# Start PostgreSQL service
+sudo service postgresql start
+
+# PostgreSQL password
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+
+echo "Installation completed successfully."

@@ -8,11 +8,10 @@ USERNAME=$(whoami)
 GROUPNAME=$(id -gn)
 
 # Set your configuration variables
-APP_PATH="$HOME/chileanfires/fires-api/"
+APP_PATH="$HOME/chileanfires/django-api/api/"
 CONDA_ENV_NAME="api"
-GUNICORN_CONFIG="gunicorn_config.py"
 APP_MODULE="run:app"
-GUNICORN_CMD="$HOME/miniconda3/envs/$CONDA_ENV_NAME/bin/gunicorn --config $GUNICORN_CONFIG $APP_MODULE"
+GUNICORN_CMD="$HOME/miniconda3/envs/$CONDA_ENV_NAME/bin/gunicorn $APP_MODULE"
 
 # Create Gunicorn service file
 SERVICE_FILE="/etc/systemd/system/myapp_gunicorn.service"

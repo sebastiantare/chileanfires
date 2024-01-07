@@ -1,5 +1,5 @@
 # Set DEV in the script
-DEV=true
+DEV=false
 
 if [ "$DEV" ]; then
     echo 'export API_SRC="$HOME/Development/chileanfires"' >> ~/.bashrc
