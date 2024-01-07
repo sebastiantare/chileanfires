@@ -19,6 +19,8 @@ then
     source ~/.bashrc
 fi
 
+sudo apt install build-essential libssl-dev libpq-dev libffi-dev python3-dev -y
+
 # Create Conda environment
 conda env create -f environment.yml
 conda activate api

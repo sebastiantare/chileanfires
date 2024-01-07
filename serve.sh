@@ -10,7 +10,7 @@ GROUPNAME=$(id -gn)
 # Set your configuration variables
 APP_PATH="$HOME/chileanfires/django-api/api/"
 CONDA_ENV_NAME="api"
-APP_MODULE="run:app"
+APP_MODULE="api.wsgi"
 GUNICORN_CMD="$HOME/miniconda3/envs/$CONDA_ENV_NAME/bin/gunicorn $APP_MODULE"
 
 # Create Gunicorn service file

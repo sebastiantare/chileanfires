@@ -27,7 +27,7 @@ SECRET_KEY = config('SECRET_KEY')
 NASA_FIRMS_TOKEN = config('NASA_FIRMS_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ['DEV'] == 'True'
+DEBUG = os.environ['DEV'] == 'true'
 
 # Add your domain(s) to ALLOWED_HOSTS
 ALLOWED_HOSTS = ['incendioschile.online', 'localhost', '127.0.0.1']
