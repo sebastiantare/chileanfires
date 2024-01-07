@@ -34,7 +34,18 @@ sudo apt-get install postgresql postgresql-contrib -y
 # Start PostgreSQL service
 sudo service postgresql start
 
+cd django-api/api
+# Migrations
+python manage.py makemigrations
+python manage.py migrate
+
+
 # PostgreSQL password
+cd ~
 sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+
+# Create PostgreSQL wildfiresDB database for django
+sudo -u postgres psql -c "CREATE DATABASE wildfiresDB"
+
 
 echo "Installation completed successfully."
