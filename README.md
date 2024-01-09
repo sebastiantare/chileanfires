@@ -3,7 +3,7 @@
 <div align="center">
 <pre>
   <b>Objective</b>
-  <p>Visualize wildfires and estimate areas with the highest probability of fires in Chile.</p>
+  <p>Visualize wildfires and estimate areas with the highest likelihood of fires in Chile.</p>
 </pre>
 
 </div>
