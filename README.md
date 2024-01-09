@@ -3,7 +3,7 @@
 <div align="center">
 <pre>
   <b>Objective</b>
-  <p>Estimate and visualize real-time wildfires and areas with the highest probability of fires in Chile.</p>
+  <p>Visualize wildfires and estimate areas with the highest probability of fires in Chile.</p>
 </pre>
 
 </div>
@@ -42,12 +42,13 @@ In this project I analyze data from [NASA's FIRMS](https://earthdata.nasa.gov/fi
 - Get areas with the most likelihood of fire.
 - Plot areas with the highest likelihood of fires in the Dashboard.
 
-## Install
+## TechStack
 
 - Python 3.10
+- Django
 - PostgreSQL
 - Conda
-- Git
+- React
 
 ## Contributing
 
