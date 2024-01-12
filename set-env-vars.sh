@@ -25,5 +25,4 @@ echo "export CONDA_SRC=$CONDA_SRC" >> ~/.bashrc
 # export DEV variable
 echo "export DEV=$DEV" >> ~/.bashrc
 
-# Source the modified ~/.bashrc to apply the changes immediately
 source ~/.bashrc

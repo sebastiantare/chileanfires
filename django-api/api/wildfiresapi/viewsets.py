@@ -24,6 +24,24 @@ class WildfiresViewset(viewsets.ReadOnlyModelViewSet):
         queryset = models.Wildfires.objects.filter(acq_date=max_acq_date)
         return queryset
 
+@method_decorator(ratelimit(key='user', rate='10/m', block=True), name='dispatch')
+class WildfiresByDateViewset(viewsets.ReadOnlyModelViewSet):
+    """
+        Returns the latest wildfires by date.
+    """
+    serializer_class = serializers.WildfiresSerializer
+
+    def get_queryset(self):
+        # Get the date from the url
+        date = self.kwargs['date']
+
+        # Convert the date string into a datetime object
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+
+        # Filter the queryset by the date
+        queryset = models.Wildfires.objects.filter(acq_date=date)
+
+        return queryset
 
 @method_decorator(ratelimit(key='user', rate='10/m', block=True), name='dispatch')
 class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):

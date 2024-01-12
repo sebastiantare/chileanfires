@@ -10,13 +10,19 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+
+#################################
+DEBUG = True
+#################################
+
+
+
 from pathlib import Path
 from decouple import config
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -26,12 +32,8 @@ SECRET_KEY = config('SECRET_KEY')
 # MAPBOX_TOKEN = config('MAPBOX_TOKEN')
 NASA_FIRMS_TOKEN = config('NASA_FIRMS_TOKEN')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ['DEV'] == 'true'
-
 # Add your domain(s) to ALLOWED_HOSTS
-ALLOWED_HOSTS = ['incendioschile.online', 'localhost', '127.0.0.1']
-
+ALLOWED_HOSTS = ['incendioschile.online', 'sebastiantare.xyz', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -66,12 +68,12 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "htpps://incendioschile.online",
+    "https://incendioschile.online",
     "https://sebastiantare.xyz",
-    "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "http://localhost:1234",
+    "http://localhost:1234"
 ]
+
 
 ROOT_URLCONF = "api.urls"
 
@@ -98,10 +100,12 @@ WSGI_APPLICATION = "api.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
+    
     # "default": {
     #    "ENGINE": "django.db.backends.sqlite3",
     #    "NAME": BASE_DIR / "db.sqlite3",
     # }
+
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'wildfiresDB',
@@ -148,13 +152,9 @@ STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# EXTRA
-
-# If debug is false, use this
 if not DEBUG:
+    DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
     # Set SECURE_HSTS_SECONDS to a suitable value, for example, 31536000 seconds (1 year)
     SECURE_HSTS_SECONDS = 31536000
 
