@@ -10,16 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-
-#################################
-DEBUG = True
-#################################
-
-
-
 from pathlib import Path
 from decouple import config
+import logging.config
 import os
+
+
+# Log the DEBUG variable
+logger = logging.getLogger(__name__)
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', False) or config('DEBUG')
+
+if DEBUG:
+    logger.info(f'DEBUG = {DEBUG}')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,9 +32,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY') or config('SECRET_KEY')
+
 # MAPBOX_TOKEN = config('MAPBOX_TOKEN')
-NASA_FIRMS_TOKEN = config('NASA_FIRMS_TOKEN')
+NASA_FIRMS_TOKEN = os.environ.get('NASA_FIRMS_TOKEN') or config('NASA_FIRMS_TOKEN')
 
 # Add your domain(s) to ALLOWED_HOSTS
 ALLOWED_HOSTS = ['incendioschile.online', 'sebastiantare.xyz', 'localhost', '127.0.0.1']
@@ -111,7 +116,8 @@ DATABASES = {
         'NAME': 'wildfiresDB',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'localhost'
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
@@ -170,3 +176,33 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
 
     CSRF_COOKIE_SECURE = True
+
+# Logging Configuration
+
+# Clear prev config
+LOGGING_CONFIG = None
+
+# Get loglevel from env
+LOGLEVEL = os.getenv('DJANGO_LOGLEVEL', 'info').upper()
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        '': {
+            'level': LOGLEVEL,
+            'handlers': ['console',],
+        },
+    },
+})
