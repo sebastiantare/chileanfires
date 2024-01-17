@@ -1,6 +1,6 @@
 import pandas as pd
-from datetime import datetime
 from wildfiresapi.models import Wildfires
+
 
 def create_wildfire_object(row):
     return Wildfires(
@@ -18,10 +18,13 @@ def create_wildfire_object(row):
         bright_t31=row['bright_t31'],
         frp=row['frp'],
         daynight=row['daynight'],
-        ftype=row['type']
+        ftype=row['type'],
+        comuna=row['comuna']
     )
 
-parquet_file_path = 'fires_merged.parquet'
+
+# parquet_file_path = 'fires_merged.parquet'
+parquet_file_path = 'fires_merged_comunas.parquet'
 df = pd.read_parquet(parquet_file_path)
 
 df['acq_date'] = pd.to_datetime(df['acq_date'])
@@ -30,7 +33,7 @@ df['acq_date'] = pd.to_datetime(df['acq_date'])
 df['type'] = df['type'].fillna(-1)
 
 # Delete previous wildfires
-#Wildfires.objects.all().delete()
+Wildfires.objects.all().delete()
 
 # Check if there is any data in the database, if there is, it exits the script
 if Wildfires.objects.all().exists():
@@ -43,7 +46,9 @@ batch_size = 100  # Adjust this value based on your system's memory constraints
 # Populate database in batches
 for i in range(0, len(df), batch_size):
     batch_df = df.iloc[i:i + batch_size]
-    wildfires_list = [create_wildfire_object(row) for _, row in batch_df.iterrows()]
+    wildfires_list = [
+            create_wildfire_object(row) for _, row in batch_df.iterrows()
+            ]
     Wildfires.objects.bulk_create(wildfires_list)
 
 print("Data populated successfully.")

@@ -1,39 +1,27 @@
-# your_app_name/cron.py
-
-from django.core.management.base import BaseCommand
 from .models import Wildfires
 import pandas as pd
+import geopandas as gpd
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-import sys
-import os
 import requests
 from time import sleep
-import configparser
+import os
+from shapely.geometry import Point
 
-
+"""
+    Requests the wildfires data, preprocesses it, and stores it in Postgres.
+    TODO: Split this function into chunks, probably better using Airflow.
+"""
 def get_data(*job_args, **job_kwargs):
-    ### Setup
     BASE_DIR = str(job_args[0])
     api_key = str(job_args[1])
 
-    config_path = os.path.join(BASE_DIR, 'config.ini')
-
-    def load_config():
-        config = configparser.ConfigParser()
-        config.read(config_path)
-        return config
-
-    config = load_config()
-
     output_directory = os.path.join(BASE_DIR, 'dump')
 
-    log_file = os.path.join(BASE_DIR, 'dump/get_data.log')
+    log_file = os.path.join(output_directory, 'get_data.log')
     logging.basicConfig(filename=log_file,
                         encoding='utf-8', level=logging.INFO)
-
-    ### Functions
 
     def transformData(df, cols):
         try:
@@ -48,22 +36,18 @@ def get_data(*job_args, **job_kwargs):
 
             new_data.columns = cols
 
-            # Remove low confidence data
-            # new_data = new_data[~(new_data['confidence'] == 'l')]
-            # logging.info(f"Filter low confidence: Done. Shape {new_data.shape}")
-
             return new_data
         except Exception as e:
             logging.error(f"Error preprocessing new data {str(e)}")
 
-    ### Get Data
+    # Get Data
 
     try:
-        base_url = config.get('API', 'base_url')
+        # NASA API
+        base_url = "https://firms.modaps.eosdis.nasa.gov"
 
-        # date - 1 day so it gets all the data in case it's processing today's data.
-        current_date = (datetime.now() - timedelta(days=1)
-                        ).strftime('%Y-%m-%d')
+        # - timedelta(days=1)
+        current_date = datetime.now().strftime('%Y-%m-%d')
 
         # Get max() date from wildfires
         if Wildfires.objects.count() > 0:
@@ -71,14 +55,15 @@ def get_data(*job_args, **job_kwargs):
             current_date = max_date.strftime('%Y-%m-%d')
 
         logging.info(
-            f"Requesting data with the following parameters Date={current_date}")
+            f"Requesting data with the following \
+            parameters Date={current_date}")
 
-        api_url_snpp = config.get('API', 'api_template_snpp').format(
-            api_key=api_key, date=current_date)
-        api_url_modis = config.get('API', 'api_template_modis').format(
-            api_key=api_key, date=current_date)
-        api_url_noaa20 = config.get('API', 'api_template_noaa20').format(
-            api_key=api_key, date=current_date)
+        api_url_snpp = f"/api/country/csv/{api_key}\
+                /VIIRS_SNPP_NRT/CHL/10/{current_date}"
+        api_url_modis = f"/api/country/csv/{api_key}\
+                /MODIS_NRT/CHL/10/{current_date}"
+        api_url_noaa20 = f"/api/country/csv/{api_key}\
+                /VIIRS_NOAA20_NRT/CHL/10/{current_date}"
 
         urls = [api_url_snpp, api_url_modis, api_url_noaa20]
 
@@ -92,7 +77,8 @@ def get_data(*job_args, **job_kwargs):
                 csv_data = response.text
 
                 if csv_data == 'Invalid MAP_KEY.':
-                    return logging.info(f"{csv_data} -> Probably too many requests. {datetime.now()}")
+                    return logging.info(f"{csv_data} -> \
+                    Probably too many requests. {datetime.now()}")
 
                 csv_filename = os.path.join(output_directory, f"dump_{i}.csv")
 
@@ -101,28 +87,22 @@ def get_data(*job_args, **job_kwargs):
                 logging.info(f"CSV data saved to {csv_filename}")
             else:
                 logging.error(
-                    f"API request failed with status code {response.status_code}")
+                    f"API request failed with \
+                    status code {response.status_code}")
             sleep(2)
 
-    except configparser.Error as e:
-        logging.error(f"Error reading configuration: {str(e)}")
     except requests.RequestException as e:
         logging.error(f"API request failed: {str(e)}")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {str(e)}")
 
-    ### Merge Data
+    # Merge Data
 
     try:
-        config = load_config()
-
-        # How data comes from the API
-        # dump_0 country_id,latitude,longitude,bright_ti4,scan,track,acq_date,acq_time,satellite,instrument,confidence,version,bright_ti5,frp,daynight
-        # dump_1 country_id,latitude,longitude,brightness,scan,track,acq_date,acq_time,satellite,instrument,confidence,version,bright_t31,frp,daynight
-        # dump_2 country_id,latitude,longitude,bright_ti4,scan,track,acq_date,acq_time,satellite,instrument,confidence,version,bright_ti5,frp,daynight
-
-        default_cols = ['latitude', 'longitude', 'brightness', 'scan', 'track', 'acq_date', 'acq_time',
-                        'satellite', 'instrument', 'confidence', 'version', 'bright_t31', 'frp', 'daynight']
+        default_cols = ['latitude', 'longitude', 'brightness', 'scan',
+                        'track', 'acq_date', 'acq_time',
+                        'satellite', 'instrument', 'confidence', 'version',
+                        'bright_t31', 'frp', 'daynight']
         db = pd.DataFrame(columns=default_cols)
 
         # Load files
@@ -141,7 +121,8 @@ def get_data(*job_args, **job_kwargs):
 
             if len(new_data.columns) != len(default_cols):
                 logging.error(
-                    f"Columns do not match. Expected {len(default_cols)}, got {len(new_data.columns)}")
+                    f"Columns do not match. Expected {len(default_cols)}, \
+                    got {len(new_data.columns)}")
                 continue
 
             new_data_transformed = transformData(new_data, db.columns)
@@ -159,7 +140,42 @@ def get_data(*job_args, **job_kwargs):
         # merged_data.reset_index(drop=True, inplace=True)
         # logging.info(f"Drop Duplicates: Done. Shape {merged_data.shape}")
 
-        # Page 51 https://modis-fire.umd.edu/files/MODIS_C6_C6.1_Fire_User_Guide_1.0.pdf
+        # Filter Volcanoes and Static data like solar panels from data
+
+        def filter_by_area(
+                points_df,
+                polygons_df,
+                lat_col='latitude',
+                lon_col='longitude'):
+            points_gdf = gpd.GeoDataFrame(
+                    points_df,
+                    geometry=gpd.points_from_xy(
+                        points_df[lat_col],
+                        points_df[lon_col])
+                    )
+
+            # Return the points that are not in the areas to ignore
+            filtered_points = points_gdf[
+                    ~(points_gdf.within(polygons_df.unary_union))]
+            return points_df[points_df.index.isin(filtered_points.index)]
+
+        # Read areas for point filtering
+        geojson_path = os.path.join(BASE_DIR, 'data/ignore_areas.geojson')
+
+        try:
+            before_size = merged_data.shape[0]
+            gdf_areas = gpd.read_file(geojson_path)
+
+            merged_data = filter_by_area(merged_data, gdf_areas)
+
+            after_size = merged_data.shape[0]
+            logging.info(f"Filtered points from {before_size} to {after_size}")
+        except Exception as e:
+            return logging.error(f"Error in filtering points by area: \
+                    {str(e)}")
+
+        # Page 51
+        # https://modis-fire.umd.edu/files/MODIS_C6_C6.1_Fire_User_Guide_1.0.pdf
         def convert_confidence(confidence):
             # Check if confidence is not a number
             if confidence == 'l':
@@ -168,7 +184,6 @@ def get_data(*job_args, **job_kwargs):
                 return 'n'
             elif confidence == 'h':
                 return 'h'
-            
             confidence_val = int(confidence)
 
             if confidence_val >= 80:
@@ -177,12 +192,35 @@ def get_data(*job_args, **job_kwargs):
                 return 'n'
             else:
                 return 'l'
-            
-        merged_data['confidence'] = merged_data['confidence'].apply(convert_confidence)
-        merged_data['confidence'] = merged_data['confidence'].astype(str)
+
+        merged_data['confidence'] = merged_data['confidence'].apply(
+                convert_confidence)
+        merged_data['confidence'] = merged_data['confidence'].astype(
+                str)
+
+        # Map the datapoints to comunas
+        def tag_comuna(row, comunas_df):
+            point = Point(row['longitude'], row['latitude'])
+            for i, row in comunas_df.iterrows():
+                if point.within(row['geometry']):
+                    # TODO: comunas overlap so I return the first one,
+                    #       so in the future would be interesting to
+                    #       have this set to an array of comunas.
+                    return row['comuna']
+            return None
+
+        comunas_path = os.path.join(BASE_DIR, 'data/comunas.geojson')
+
+        gdf_comunas = gpd.read_file(comunas_path)
+
+        merged_data['comuna'] = merged_data.apply(
+                tag_comuna, axis=1, args=(gdf_comunas,))
+
+        # TODO: Classify data with xgboost model to predict type.
+        # TODO: Filter non-wildfire data (aka static data, volcanoes, etc).
 
         # Save to csv
-        csv_filename = os.path.join(output_directory, f"dump.csv")
+        csv_filename = os.path.join(output_directory, "dump.csv")
         merged_data.to_csv(csv_filename, index=False)
         logging.info(f"Saving to csv: {csv_filename}")
 
@@ -194,13 +232,14 @@ def get_data(*job_args, **job_kwargs):
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")
 
-    ### Insert data in PostrgreSQL
+    # Insert data in PostgreSQL
 
     # Get new data path
     csv_path = os.path.join(BASE_DIR, 'dump/dump.csv')
     success = False
 
-    # Read if there is a file dalled dump.csv and insert data into the database of Wildfires
+    # Read if there is a file dalled dump.csv
+    # and insert data into the database of Wildfires
     with open(csv_path, 'r') as f:
         try:
             df = pd.read_csv(f)
@@ -215,7 +254,12 @@ def get_data(*job_args, **job_kwargs):
 
             for index, row in df.iterrows():
 
-                if Wildfires.objects.filter(latitude=row['latitude'], longitude=row['longitude'], acq_date=row['acq_date'], acq_time=row['acq_time']).exists():
+                if Wildfires.objects.filter(
+                        latitude=row['latitude'],
+                        longitude=row['longitude'],
+                        acq_date=row['acq_date'],
+                        acq_time=row['acq_time']
+                        ) .exists():
                     continue
 
                 wildfire = Wildfires(
@@ -232,12 +276,14 @@ def get_data(*job_args, **job_kwargs):
                     version=row['version'],
                     bright_t31=row['bright_t31'],
                     frp=row['frp'],
-                    daynight=row['daynight']
-                    #type
+                    daynight=row['daynight'],
+                    # type
+                    comuna=row['comuna']
                 )
                 wildfires_list.append(wildfire)
 
-            logging.info(f"Rows to insert after filtering {len(wildfires_list)}")
+            logging.info(f"Rows to insert after filtering \
+                    {len(wildfires_list)}")
             Wildfires.objects.bulk_create(wildfires_list)
             success = True
         except Exception as e:

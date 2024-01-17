@@ -11,7 +11,8 @@ from django.db import connection
 from django.utils.decorators import method_decorator
 
 
-@method_decorator(ratelimit(key='user', rate='10/m', block=True), name='dispatch')
+@method_decorator(ratelimit(key='user', rate='10/m', block=True),
+                  name='dispatch')
 class WildfiresViewset(viewsets.ReadOnlyModelViewSet):
     """
         Returns the latest wildfires.
@@ -24,10 +25,12 @@ class WildfiresViewset(viewsets.ReadOnlyModelViewSet):
         queryset = models.Wildfires.objects.filter(acq_date=max_acq_date)
         return queryset
 
-@method_decorator(ratelimit(key='user', rate='10/m', block=True), name='dispatch')
+
+@method_decorator(ratelimit(key='user', rate='10/m', block=True),
+                  name='dispatch')
 class WildfiresByDateViewset(viewsets.ReadOnlyModelViewSet):
     """
-        Returns the latest wildfires by date.
+        Returns wildfires by date.
     """
     serializer_class = serializers.WildfiresSerializer
 
@@ -43,7 +46,9 @@ class WildfiresByDateViewset(viewsets.ReadOnlyModelViewSet):
 
         return queryset
 
-@method_decorator(ratelimit(key='user', rate='10/m', block=True), name='dispatch')
+
+@method_decorator(ratelimit(key='user', rate='10/m', block=True),
+                  name='dispatch')
 class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
     """
         Returns count of all fires occurring by month in the last 12 months.
@@ -58,7 +63,7 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
             SELECT
                 EXTRACT(MONTH FROM acq_date) AS month,
                 COUNT(id) AS fire_count
-            FROM wildfiresapi_wildfires 
+            FROM wildfiresapi_wildfires
             WHERE EXTRACT(YEAR FROM acq_date) = %s
             GROUP BY month
             ORDER BY month
@@ -75,3 +80,4 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
         ]
 
         return queryset
+

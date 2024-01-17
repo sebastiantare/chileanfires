@@ -22,12 +22,14 @@
      12  frp         580029 non-null  float64
      13  daynight    580029 non-null  object
      14  type        367685 non-null  float64
+     + comuna                         object
 
 """
 from datetime import datetime
 from django.db import models
 
 # Create your models here.
+
 
 class Wildfires(models.Model):
     latitude = models.FloatField()
@@ -44,8 +46,10 @@ class Wildfires(models.Model):
     bright_t31 = models.FloatField()
     frp = models.FloatField()
     daynight = models.CharField(max_length=255)
-    #type is reserved
+    # type is reserved
     ftype = models.FloatField(null=True, blank=True)
+    # comunas
+    comuna = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"Wildfire at \
