@@ -6,16 +6,18 @@ from datetime import datetime
 import logging
 import requests
 from time import sleep
-import os
+from django.conf import settings
 from shapely.geometry import Point
 
 """
     Requests the wildfires data, preprocesses it, and stores it in Postgres.
     TODO: Split this function into chunks, probably better using Airflow.
 """
-def get_data(*job_args, **job_kwargs):
-    BASE_DIR = str(job_args[0])
-    api_key = str(job_args[1])
+def get_data():
+    BASE_DIR = settings.BASE_DIR
+    api_key = settings.MAPBOX_TOKEN
+
+    print("Test Print")
 
     output_directory = os.path.join(BASE_DIR, 'dump')
 

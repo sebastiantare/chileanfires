@@ -6,4 +6,3 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('wildfires/', include('wildfiresapi.urls')),
 ]
-

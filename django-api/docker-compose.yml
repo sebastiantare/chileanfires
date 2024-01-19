@@ -20,16 +20,16 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=wildfiresDB
-  cron:
-    build: .
-    restart: unless-stopped
-    entrypoint: [ "./cron-entrypoint.sh" ]
-    working_dir: /app
-    env_file:
-      - api/api/.env
-    depends_on:
-    - db
-    command: cron -f
+  #cron:
+  #  build: .
+  #  restart: unless-stopped
+  #  entrypoint: [ "./cron-entrypoint.sh" ]
+  #  working_dir: /app
+  #  env_file:
+  #    - api/api/.env
+  #  depends_on:
+  #  - db
+  #  command: cron -f
   
 volumes:
   postgres_data:

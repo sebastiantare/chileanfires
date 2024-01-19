@@ -29,21 +29,16 @@ df = pd.read_parquet(parquet_file_path)
 
 df['acq_date'] = pd.to_datetime(df['acq_date'])
 
-# Make type null values -1
 df['type'] = df['type'].fillna(-1)
 
-# Delete previous wildfires
-Wildfires.objects.all().delete()
+#Wildfires.objects.all().delete()
 
-# Check if there is any data in the database, if there is, it exits the script
 if Wildfires.objects.all().exists():
     print("Data already populated.")
     exit()
 
-# Set batch size based on available memory
-batch_size = 100  # Adjust this value based on your system's memory constraints
+batch_size = 100
 
-# Populate database in batches
 for i in range(0, len(df), batch_size):
     batch_df = df.iloc[i:i + batch_size]
     wildfires_list = [

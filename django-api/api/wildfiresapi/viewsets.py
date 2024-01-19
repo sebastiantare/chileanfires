@@ -35,13 +35,8 @@ class WildfiresByDateViewset(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.WildfiresSerializer
 
     def get_queryset(self):
-        # Get the date from the url
         date = self.kwargs['date']
-
-        # Convert the date string into a datetime object
         date = datetime.strptime(date, '%Y-%m-%d').date()
-
-        # Filter the queryset by the date
         queryset = models.Wildfires.objects.filter(acq_date=date)
 
         return queryset
@@ -56,7 +51,6 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.MonthlyWildfiresSerializer
 
     def get_queryset(self):
-        # Calculate the date 12 months ago from today
         last_year = datetime.now().year - 1
 
         raw_sql = """
@@ -69,12 +63,10 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
             ORDER BY month
         """
 
-        # Execute the raw SQL query
         with connection.cursor() as cursor:
             cursor.execute(raw_sql, [last_year])
             rows = cursor.fetchall()
 
-        # Convert the result into a list of dictionaries
         queryset = [
             {'month': row[0], 'fire_count': row[1]} for row in rows
         ]

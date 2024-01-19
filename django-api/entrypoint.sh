@@ -8,4 +8,5 @@ python manage.py migrate
 
 python manage.py shell < populate_database.py
 
-gunicorn -c gunicorn_config.py api.wsgi 
+# This now is managed in the Dockerfile
+# gunicorn -c gunicorn_config.py api.wsgi 

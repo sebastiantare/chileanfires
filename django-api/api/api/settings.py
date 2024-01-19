@@ -19,26 +19,25 @@ import os
 # Log the DEBUG variable
 logger = logging.getLogger(__name__)
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', False) or config('DEBUG')
 
 if DEBUG:
     logger.info(f'DEBUG = {DEBUG}')
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY') or config('SECRET_KEY')
 
-# MAPBOX_TOKEN = config('MAPBOX_TOKEN')
-NASA_FIRMS_TOKEN = os.environ.get('NASA_FIRMS_TOKEN') or config('NASA_FIRMS_TOKEN')
+MAPBOX_TOKEN = os.environ.get('SECRET_KEY') or config('MAPBOX_TOKEN')
 
-# Add your domain(s) to ALLOWED_HOSTS
-ALLOWED_HOSTS = ['incendioschile.online', 'sebastiantare.xyz', 'localhost', '127.0.0.1']
+NASA_FIRMS_TOKEN = os.environ.get('NASA_FIRMS_TOKEN') \
+        or config('NASA_FIRMS_TOKEN')
+
+ALLOWED_HOSTS = ['incendioschile.online', 'sebastiantare.xyz',
+                 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -54,11 +53,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'corsheaders',
-] 
+]
 
-# Add a cron job with args and log to file
 CRONJOBS = [
-    ('*/10 * * * *', 'wildfiresapi.cron_job.get_data', [f'{BASE_DIR}', f'{NASA_FIRMS_TOKEN}']),
+    ('*/10 * * * *', 'wildfiresapi.cron_job.get_data',
+     '>> /app/api/get_data.log 2>$1'),
 ]
 
 MIDDLEWARE = [
@@ -105,7 +104,6 @@ WSGI_APPLICATION = "api.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    
     # "default": {
     #    "ENGINE": "django.db.backends.sqlite3",
     #    "NAME": BASE_DIR / "db.sqlite3",
@@ -126,16 +124,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.\
+                UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation.\
+                MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.\
+                CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.\
+                NumericPasswordValidator",
     },
 ]
 
@@ -160,29 +162,15 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 if not DEBUG:
     DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-    # Set SECURE_HSTS_SECONDS to a suitable value, for example, 31536000 seconds (1 year)
     SECURE_HSTS_SECONDS = 31536000
-
-    # Optionally, you can also set the following to instruct browsers to include subdomains:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-
-    # Make sure to use HTTPS for all requests, not just the ones that are secure
     SECURE_HSTS_PRELOAD = True
-
-    # The directive instructs browsers to upgrade all requests to HTTPS
     SECURE_SSL_REDIRECT = True
-
     SESSION_COOKIE_SECURE = True
-
     CSRF_COOKIE_SECURE = True
 
 # Logging Configuration
-
-# Clear prev config
 LOGGING_CONFIG = None
-
-# Get loglevel from env
 LOGLEVEL = os.getenv('DJANGO_LOGLEVEL', 'info').upper()
 
 logging.config.dictConfig({
@@ -190,7 +178,8 @@ logging.config.dictConfig({
     'disable_existing_loggers': False,
     'formatters': {
         'console': {
-            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s',
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] \
+                       %(module)s %(process)d %(thread)d %(message)s',
         },
     },
     'handlers': {
