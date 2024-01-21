@@ -51,7 +51,6 @@ def get_data():
         # - timedelta(days=1)
         current_date = datetime.now().strftime('%Y-%m-%d')
 
-        # Get max() date from wildfires
         if Wildfires.objects.count() > 0:
             max_date = Wildfires.objects.latest('acq_date').acq_date
             current_date = max_date.strftime('%Y-%m-%d')
@@ -72,7 +71,6 @@ def get_data():
         for i, url in enumerate(urls):
             request_url = base_url + url
 
-            # Get & save data
             response = requests.get(request_url)
 
             if response.status_code == 200:

@@ -23,7 +23,6 @@ def create_wildfire_object(row):
     )
 
 
-# parquet_file_path = 'fires_merged.parquet'
 parquet_file_path = 'fires_merged_comunas.parquet'
 df = pd.read_parquet(parquet_file_path)
 
@@ -31,19 +30,16 @@ df['acq_date'] = pd.to_datetime(df['acq_date'])
 
 df['type'] = df['type'].fillna(-1)
 
-#Wildfires.objects.all().delete()
-
 if Wildfires.objects.all().exists():
     print("Data already populated.")
-    exit()
+else:
+    batch_size = 100
 
-batch_size = 100
+    for i in range(0, len(df), batch_size):
+        batch_df = df.iloc[i:i + batch_size]
+        wildfires_list = [
+                create_wildfire_object(row) for _, row in batch_df.iterrows()
+                ]
+        Wildfires.objects.bulk_create(wildfires_list)
 
-for i in range(0, len(df), batch_size):
-    batch_df = df.iloc[i:i + batch_size]
-    wildfires_list = [
-            create_wildfire_object(row) for _, row in batch_df.iterrows()
-            ]
-    Wildfires.objects.bulk_create(wildfires_list)
-
-print("Data populated successfully.")
+    print("Data populated successfully.")

@@ -10,7 +10,7 @@ loglevel = 'info'
 accesslog = '-'
 
 # Bind
-bind = "0.0.0.0:8000"
+bind = "127.0.0.1:8000"
 
 # Prevent excessive memory usage
 limit_request_line = 8190
