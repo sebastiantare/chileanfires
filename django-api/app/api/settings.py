@@ -107,11 +107,11 @@ WSGI_APPLICATION = "api.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'wildfiresDB',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
-        'PORT': '5432',
+        'NAME': os.environ.get("POSTGRES_DB", "user"),
+        'USER': os.environ.get("POSTGRES_USER", "user"),
+        'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "user"),
+        'HOST': os.environ.get("POSTGRES_HOST", "user"),
+        'PORT': os.environ.get("POSTGRES_PORT", "user"),
     }
 }
 

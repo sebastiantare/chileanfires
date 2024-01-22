@@ -17,4 +17,6 @@ COPY ./entrypoint.sh .
 
 COPY . .
 
+EXPOSE 8000
+
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
