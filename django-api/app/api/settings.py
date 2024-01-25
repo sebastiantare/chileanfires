@@ -11,14 +11,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-import logging.config
 import os
 
-
-# Log the DEBUG variable
-logger = logging.getLogger(__name__)
-
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = os.environ.get("DEBUG", default=0)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,25 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
-
-MAPBOX_TOKEN = os.environ.get('SECRET_KEY')
-
+MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 NASA_FIRMS_TOKEN = os.environ.get('NASA_FIRMS_TOKEN')
 
-# ALLOWED_HOSTS = ['incendioschile.online', 'sebastiantare.xyz', '127.0.0.1']
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-
-# Postgresql user, password, database
-POSTGRES_USER = os.environ.get('POSTGRES_USER')
-POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
-POSTGRES_DB = os.environ.get('POSTGRES_DB')
-POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
-POSTGRES_PORT = os.environ.get('POSTGRES_PORT')
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django_crontab',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -57,10 +41,6 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
-CRONJOBS = [
-    ('*/10 * * * *', 'wildfiresapi.cron_job.get_data',
-     '>> /app/api/get_data.log 2>$1'),
-]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -105,15 +85,18 @@ WSGI_APPLICATION = "api.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get("POSTGRES_DB", "user"),
-        'USER': os.environ.get("POSTGRES_USER", "user"),
-        'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "user"),
-        'HOST': os.environ.get("POSTGRES_HOST", "user"),
-        'PORT': os.environ.get("POSTGRES_PORT", "user"),
+    "default": {
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
+        "USER": os.environ.get("SQL_USER", "user"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
+        "PORT": os.environ.get("SQL_PORT", "5432"),
     }
 }
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://127.0.0.1:6379/0")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -156,12 +139,5 @@ STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-if not DEBUG:
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
