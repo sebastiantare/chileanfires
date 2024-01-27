@@ -4,3 +4,4 @@ cron/logs/*
 .env
 .env.dev
 old
+*.pyc
