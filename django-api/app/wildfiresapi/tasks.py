@@ -10,14 +10,14 @@ import requests
 from time import sleep
 from django.conf import settings
 from shapely.geometry import Point
+# import celery app
+from api.celery import app
 
 
-@shared_task
+@app.task
 def get_data():
     BASE_DIR = settings.BASE_DIR
-    api_key = settings.MAPBOX_TOKEN
-
-    print("Test Print")
+    api_key = settings.NASA_FIRMS_TOKEN
 
     output_directory = os.path.join(BASE_DIR, 'dump')
 
@@ -26,7 +26,6 @@ def get_data():
                         encoding='utf-8', level=logging.INFO)
 
     # Get Data
-
     try:
         # NASA API
         base_url = "https://firms.modaps.eosdis.nasa.gov"
@@ -39,15 +38,15 @@ def get_data():
             current_date = max_date.strftime('%Y-%m-%d')
 
         logging.info(
-            f"Requesting data with the following \
-            parameters Date={current_date}")
+            "Requesting data with the following"
+            f"parameters Date={current_date}")
 
-        api_url_snpp = f"/api/country/csv/{api_key}\
-                /VIIRS_SNPP_NRT/CHL/10/{current_date}"
-        api_url_modis = f"/api/country/csv/{api_key}\
-                /MODIS_NRT/CHL/10/{current_date}"
-        api_url_noaa20 = f"/api/country/csv/{api_key}\
-                /VIIRS_NOAA20_NRT/CHL/10/{current_date}"
+        api_url_snpp = f"/api/country/csv/{api_key}" \
+                       f"/VIIRS_SNPP_NRT/CHL/10/{current_date}"
+        api_url_modis = f"/api/country/csv/{api_key}" \
+                        f"/MODIS_NRT/CHL/10/{current_date}"
+        api_url_noaa20 = f"/api/country/csv/{api_key}" \
+                         f"/VIIRS_NOAA20_NRT/CHL/10/{current_date}"
 
         urls = [api_url_snpp, api_url_modis, api_url_noaa20]
 
@@ -60,8 +59,10 @@ def get_data():
                 csv_data = response.text
 
                 if csv_data == 'Invalid MAP_KEY.':
-                    return logging.info(f"{csv_data} -> \
-                    Probably too many requests. {datetime.now()}")
+                    return logging.info(
+                            f"{csv_data} ->"
+                            f" Probably too many requests."
+                            f"{datetime.now()}")
 
                 csv_filename = os.path.join(output_directory, f"dump_{i}.csv")
 
@@ -70,8 +71,8 @@ def get_data():
                 logging.info(f"CSV data saved to {csv_filename}")
             else:
                 logging.error(
-                    f"API request failed with \
-                    status code {response.status_code}")
+                    f"API request failed with"
+                    f"status code {response.status_code}")
             sleep(2)
 
         # Invoke shared_task to merge data
@@ -83,47 +84,32 @@ def get_data():
         logging.error(f"An unexpected error occurred: {str(e)}")
 
 
-@shared_task
-def transform_data(df, cols):
-    try:
-        new_data = df.copy()
-        # Preprocess some columns
-        new_data['acq_date'] = pd.to_datetime(
-            new_data['acq_date']).astype('datetime64[us]')
-        # new_data['hour'] = new_data['acq_time'].apply(parse_time)
-        # new_data['hour'] = new_data['hour'].dt.components.hours
-
-        logging.info(f"Transform Hour: Done. Shape {new_data.shape}")
-
-        new_data.columns = cols
-
-        return new_data
-    except Exception as e:
-        logging.error(f"Error preprocessing new data {str(e)}")
 
 
-@shared_task
-def filter_by_area(
-        points_df,
-        polygons_df,
-        lat_col='latitude',
-        lon_col='longitude'):
-    points_gdf = gpd.GeoDataFrame(
-            points_df,
-            geometry=gpd.points_from_xy(
-                points_df[lat_col],
-                points_df[lon_col])
-            )
 
-    # Return the points that are not in the areas to ignore
-    filtered_points = points_gdf[
-            ~(points_gdf.within(polygons_df.unary_union))]
-    return points_df[points_df.index.isin(filtered_points.index)]
+
 
 
 @shared_task
 def merge_data():
     BASE_DIR = settings.BASE_DIR
+
+    def transform_data(df, cols):
+        try:
+            new_data = df.copy()
+            # Preprocess some columns
+            new_data['acq_date'] = pd.to_datetime(
+                new_data['acq_date']).astype('datetime64[us]')
+            # new_data['hour'] = new_data['acq_time'].apply(parse_time)
+            # new_data['hour'] = new_data['hour'].dt.components.hours
+
+            logging.info(f"Transform Hour: Done. Shape {new_data.shape}")
+
+            new_data.columns = cols
+
+            return new_data
+        except Exception as e:
+            logging.error(f"Error preprocessing new data {str(e)}")
 
     try:
         default_cols = ['latitude', 'longitude', 'brightness', 'scan',
@@ -137,33 +123,53 @@ def merge_data():
 
         merged_data = pd.DataFrame(columns=default_cols, dtype='object')
 
-        for i in range(3):
-            csv_filename = os.path.join(output_directory, f"dump_{i}.csv")
-            new_data = pd.read_csv(csv_filename)
-            logging.info(f"New Data Size {new_data.shape}")
+        try:
+            for i in range(3):
+                csv_filename = os.path.join(output_directory, f"dump_{i}.csv")
+                new_data = pd.read_csv(csv_filename)
+                logging.info(f"New Data Size {new_data.shape}")
 
-            # Drop country CL
-            if 'country_id' in new_data.columns:
-                new_data.drop('country_id', axis=1, inplace=True)
+                # Drop country CL
+                if 'country_id' in new_data.columns:
+                    new_data.drop('country_id', axis=1, inplace=True)
 
-            if len(new_data.columns) != len(default_cols):
-                logging.error(
-                    f"Columns do not match. Expected {len(default_cols)}, \
-                    got {len(new_data.columns)}")
-                continue
+                if len(new_data.columns) != len(default_cols):
+                    logging.error(
+                        f"Columns do not match. Expected {len(default_cols)},"
+                        f"got {len(new_data.columns)}")
+                    continue
 
-            new_data_transformed = transform_data.delay(
-                    new_data,
-                    db.columns
-                    ).get()
+                new_data_transformed = transform_data(
+                        new_data,
+                        db.columns
+                        )
 
-            merged_data = pd.concat(
-                [merged_data, new_data_transformed], axis=0)
+                merged_data = pd.concat(
+                    [merged_data, new_data_transformed], axis=0)
 
-            logging.info(f"Concatenate: Done. Shape {merged_data.shape}")
+                logging.info(f"Concatenate: Done. Shape {merged_data.shape}")
 
-            os.remove(csv_filename)
-            logging.info(f"Successfully removed file: {csv_filename}")
+                os.remove(csv_filename)
+                logging.info(f"Successfully removed file: {csv_filename}")
+        except Exception as e:
+            logging.error(f"Error merging data: {str(e)}")
+
+        def filter_by_area(
+                points_df,
+                polygons_df,
+                lat_col='latitude',
+                lon_col='longitude'):
+            points_gdf = gpd.GeoDataFrame(
+                    points_df,
+                    geometry=gpd.points_from_xy(
+                        points_df[lat_col],
+                        points_df[lon_col])
+                    )
+
+            # Return the points that are not in the areas to ignore
+            filtered_points = points_gdf[
+                    ~(points_gdf.within(polygons_df.unary_union))]
+            return points_df[points_df.index.isin(filtered_points.index)]
 
         # Drop duplicates
         # merged_data.drop_duplicates(inplace=True)
@@ -177,15 +183,16 @@ def merge_data():
 
         try:
             before_size = merged_data.shape[0]
-            gdf_areas = gpd.read_file(geojson_path)
+            gdf_areas = gpd.read_file(geojson_path, driver='GeoJSON')
 
-            merged_data = filter_by_area.delay(merged_data, gdf_areas).get()
+            merged_data = filter_by_area(merged_data, gdf_areas)
 
             after_size = merged_data.shape[0]
             logging.info(f"Filtered points from {before_size} to {after_size}")
         except Exception as e:
-            return logging.error(f"Error in filtering points by area: \
-                    {str(e)}")
+            return logging.error(
+                    "Error in filtering points by area: "
+                    f"{str(e)}")
 
         # Page 51
         # https://modis-fire.umd.edu/files/MODIS_C6_C6.1_Fire_User_Guide_1.0.pdf
@@ -224,7 +231,7 @@ def merge_data():
 
         comunas_path = os.path.join(BASE_DIR, 'data/comunas.geojson')
 
-        gdf_comunas = gpd.read_file(comunas_path)
+        gdf_comunas = gpd.read_file(comunas_path, driver='GeoJSON')
 
         merged_data['comuna'] = merged_data.apply(
                 tag_comuna, axis=1, args=(gdf_comunas,))
@@ -302,8 +309,8 @@ def insert_data():
                 )
                 wildfires_list.append(wildfire)
 
-            logging.info(f"Rows to insert after filtering \
-                    {len(wildfires_list)}")
+            logging.info(f"Rows to insert after filtering"
+                         f"{len(wildfires_list)}")
             Wildfires.objects.bulk_create(wildfires_list)
             success = True
         except Exception as e:

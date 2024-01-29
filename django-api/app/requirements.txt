@@ -42,3 +42,6 @@ vine==5.1.0
 wcwidth==0.2.13
 fastparquet
 flower
+requests
+fastjsonschema==2.19.1
+rtree
