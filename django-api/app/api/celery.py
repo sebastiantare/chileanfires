@@ -13,6 +13,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "get_data_10_min": {
         "task": "wildfiresapi.tasks.get_data",
-        "schedule": 300,
+        "schedule": 600,
     },
 }

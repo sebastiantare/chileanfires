@@ -56,8 +56,10 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "https://incendioschile.online",
     "https://sebastiantare.xyz",
+    "http://0.0.0.0:8000",
+    "http://0.0.0.0:1234",
     "http://127.0.0.1:8000",
-    "http://127.0.0.1:1234"
+    "http://127.0.0.1:1234",
 ]
 
 ROOT_URLCONF = "api.urls"

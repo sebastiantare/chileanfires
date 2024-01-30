@@ -19,14 +19,16 @@ def create_wildfire_object(row):
         frp=row['frp'],
         daynight=row['daynight'],
         ftype=row['type'],
-        comuna=row['comuna']
+        comuna=row['comuna'],
+        acq_datetime_gmt_3=row['acq_datetime_gmt_3'],
     )
 
 
-parquet_file_path = 'fires_merged_comunas.parquet'
+parquet_file_path = 'fires_merged_comunas_timezone.parquet'
 df = pd.read_parquet(parquet_file_path)
 
 df['acq_date'] = pd.to_datetime(df['acq_date'])
+df['acq_datetime_gmt_3'] = pd.to_datetime(df['acq_datetime_gmt_3'])
 
 df['type'] = df['type'].fillna(-1)
 

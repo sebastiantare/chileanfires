@@ -21,15 +21,19 @@ class Wildfires(models.Model):
     daynight = models.CharField(max_length=255)
     ftype = models.FloatField(null=True, blank=True)
     comuna = models.CharField(max_length=255, null=True, blank=True)
+    acq_datetime_gmt_3 = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Wildfire at \
-            ({self.latitude}, {self.longitude}) on {self.acq_date}"
+        return f"Wildfire at" \
+            f"({self.latitude}, {self.longitude}) on {self.acq_date}"
 
     def get_datetime(self):
-        acq_date_time_str = f"\
-            {self.acq_date.strftime('%Y-%m-%d')} {self.acq_time:04d}"
+        acq_date_time_str = \
+            f"{self.acq_date.strftime('%Y-%m-%d')} {self.acq_time:04d}"
 
         acq_datetime = datetime.strptime(acq_date_time_str, '%Y-%m-%d %H%M')
 
         return acq_datetime
+
+    def get_chilean_datetime(self):
+        return self.acq_datetime_gmt_3.strftime('%Y-%m-%d %H:%M:%S')

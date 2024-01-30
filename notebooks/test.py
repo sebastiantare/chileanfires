@@ -32,6 +32,8 @@ preds = np.where(preds > 0.5, 1, 0)
 
 new_data['ftype'] = preds
 
-new_data.to_csv('test_data_result.csv', index=False)
+print(new_data.head())
+
+#new_data.to_csv('test_data_result.csv', index=False)
 
 print(preds)

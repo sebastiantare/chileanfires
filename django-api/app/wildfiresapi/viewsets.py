@@ -30,14 +30,18 @@ class WildfiresViewset(viewsets.ReadOnlyModelViewSet):
                   name='dispatch')
 class WildfiresByDateViewset(viewsets.ReadOnlyModelViewSet):
     """
-        Returns wildfires by date.
+        Returns wildfires by Chilean date (GMT-3).
     """
     serializer_class = serializers.WildfiresSerializer
 
     def get_queryset(self):
         date = self.kwargs['date']
         date = datetime.strptime(date, '%Y-%m-%d').date()
-        queryset = models.Wildfires.objects.filter(acq_date=date)
+
+        # Get all the records that match the date using the datetime field
+        # acq_datetime_gmt_3
+        queryset = models.Wildfires.objects.filter(
+            acq_datetime_gmt_3__date=date)
 
         return queryset
 
@@ -55,10 +59,10 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
 
         raw_sql = """
             SELECT
-                EXTRACT(MONTH FROM acq_date) AS month,
+                EXTRACT(MONTH FROM acq_datetime_gmt_3) AS month,
                 COUNT(id) AS fire_count
             FROM wildfiresapi_wildfires
-            WHERE EXTRACT(YEAR FROM acq_date) = %s
+            WHERE EXTRACT(YEAR FROM acq_datetime_gmt_3) = %s
             GROUP BY month
             ORDER BY month
         """
@@ -72,4 +76,3 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
         ]
 
         return queryset
-

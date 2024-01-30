@@ -12,7 +12,8 @@ from django.conf import settings
 from shapely.geometry import Point
 # import celery app
 from api.celery import app
-
+import xgboost as xgb
+import numpy as np
 
 @app.task
 def get_data():
@@ -84,30 +85,24 @@ def get_data():
         logging.error(f"An unexpected error occurred: {str(e)}")
 
 
-
-
-
-
-
-
 @shared_task
 def merge_data():
     BASE_DIR = settings.BASE_DIR
 
     def transform_data(df, cols):
         try:
-            new_data = df.copy()
+            df = df.copy()
             # Preprocess some columns
-            new_data['acq_date'] = pd.to_datetime(
-                new_data['acq_date']).astype('datetime64[us]')
-            # new_data['hour'] = new_data['acq_time'].apply(parse_time)
-            # new_data['hour'] = new_data['hour'].dt.components.hours
+            df['acq_date'] = pd.to_datetime(
+                df['acq_date']).astype('datetime64[us]')
+            # df['hour'] = df['acq_time'].apply(parse_time)
+            # df['hour'] = df['hour'].dt.components.hours
 
-            logging.info(f"Transform Hour: Done. Shape {new_data.shape}")
+            logging.info(f"Transform Hour: Done. Shape {df.shape}")
 
-            new_data.columns = cols
+            df.columns = cols
 
-            return new_data
+            return df
         except Exception as e:
             logging.error(f"Error preprocessing new data {str(e)}")
 
@@ -126,26 +121,26 @@ def merge_data():
         try:
             for i in range(3):
                 csv_filename = os.path.join(output_directory, f"dump_{i}.csv")
-                new_data = pd.read_csv(csv_filename)
-                logging.info(f"New Data Size {new_data.shape}")
+                df = pd.read_csv(csv_filename)
+                logging.info(f"New Data Size {df.shape}")
 
                 # Drop country CL
-                if 'country_id' in new_data.columns:
-                    new_data.drop('country_id', axis=1, inplace=True)
+                if 'country_id' in df.columns:
+                    df.drop('country_id', axis=1, inplace=True)
 
-                if len(new_data.columns) != len(default_cols):
+                if len(df.columns) != len(default_cols):
                     logging.error(
                         f"Columns do not match. Expected {len(default_cols)},"
-                        f"got {len(new_data.columns)}")
+                        f"got {len(df.columns)}")
                     continue
 
-                new_data_transformed = transform_data(
-                        new_data,
+                df_transformed = transform_data(
+                        df,
                         db.columns
                         )
 
                 merged_data = pd.concat(
-                    [merged_data, new_data_transformed], axis=0)
+                    [merged_data, df_transformed], axis=0)
 
                 logging.info(f"Concatenate: Done. Shape {merged_data.shape}")
 
@@ -154,19 +149,18 @@ def merge_data():
         except Exception as e:
             logging.error(f"Error merging data: {str(e)}")
 
+        # Filter points that fall within the areas to ignore
         def filter_by_area(
-                points_df,
-                polygons_df,
-                lat_col='latitude',
-                lon_col='longitude'):
+                    points_df, polygons_df,
+                    lat_col='latitude',
+                    lon_col='longitude'
+                     ):
             points_gdf = gpd.GeoDataFrame(
                     points_df,
                     geometry=gpd.points_from_xy(
                         points_df[lat_col],
                         points_df[lon_col])
                     )
-
-            # Return the points that are not in the areas to ignore
             filtered_points = points_gdf[
                     ~(points_gdf.within(polygons_df.unary_union))]
             return points_df[points_df.index.isin(filtered_points.index)]
@@ -236,8 +230,18 @@ def merge_data():
         merged_data['comuna'] = merged_data.apply(
                 tag_comuna, axis=1, args=(gdf_comunas,))
 
-        # TODO: Classify data with xgboost model to predict type.
-        # TODO: Filter non-wildfire data (aka static data, volcanoes, etc).
+        # Parse datetime to match Chilean timezone
+        def parse_time(value):
+            hours = value // 100
+            minutes = value % 100
+            return pd.Timedelta(hours=hours, minutes=minutes)
+
+        merged_data['acq_datetime_gmt_3'] = \
+            pd.to_datetime(merged_data['acq_date']) \
+            + merged_data['acq_time'].apply(parse_time)
+
+        merged_data['acq_datetime_gmt_3'] = \
+            merged_data['acq_datetime_gmt_3'] - pd.Timedelta(hours=3)
 
         # Save to csv
         csv_filename = os.path.join(output_directory, "dump.csv")
@@ -245,7 +249,7 @@ def merge_data():
         logging.info(f"Saving to csv: {csv_filename}")
 
         # Insert data into the database
-        insert_data.delay()
+        classify_data.delay()
 
     except FileNotFoundError:
         logging.error(f"The file {csv_filename} does not exist.")
@@ -254,6 +258,78 @@ def merge_data():
             f"You don't have permission to delete the file {csv_filename}.")
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")
+
+
+@shared_task
+def classify_data():
+    # Insert data in PostgreSQL
+    BASE_DIR = settings.BASE_DIR
+
+    # Get new data path
+    csv_path = os.path.join(BASE_DIR, 'dump/dump.csv')
+
+    # Read if there is a file dalled dump.csv
+    # and insert data into the database of Wildfires
+    with open(csv_path, 'r') as f:
+        try:
+            df = pd.read_csv(f)
+
+            logging.info(f"Rows to process {df.shape[0]}")
+
+            for index, row in df.iterrows():
+                if Wildfires.objects.filter(
+                        latitude=row['latitude'],
+                        longitude=row['longitude'],
+                        acq_date=row['acq_date'],
+                        acq_time=row['acq_time']
+                        ) .exists():
+                    # Remove row from df
+                    df.drop(index, inplace=True)
+                    continue
+
+            if df.shape[0] == 0:
+                logging.info("No new data to process...")
+                return
+
+            # Load xgboost model
+            model_path = os.path.join(BASE_DIR, 'data/xgb_model.json')
+            model = xgb.XGBClassifier()
+            model.load_model(model_path)
+
+            # Prepare for prediction
+            features = [
+                    'frp', 'track', 'daynight', 'confidence',
+                    'latitude', 'longitude'
+                    ]
+
+            # Categorical cols to numeric
+            if 'daynight' in df.columns:
+                df['daynight'] = df['daynight'].apply(
+                        lambda x: 1 if x != 'D' else 0)
+                df['daynight'] = df['daynight'].astype(int)
+
+            if 'confidence' in df.columns:
+                df['confidence'] = df['confidence'].apply(
+                        lambda x: 0 if x == 'l' else 1
+                        if x == 'n' else 2 if x == 'h' else 3)
+                df['confidence'] = df['confidence'].astype(int)
+
+            preds = model.predict(df[features])
+            preds = np.where(preds > 0.5, 1, 0)
+            df['ftype'] = preds
+
+            # Filter non-wildfire data
+            df = df[df['ftype'] != 0]
+
+            # Save to replace old dump.csv
+            df.to_csv(csv_path, index=False)
+            logging.info(f"Saving to csv: {csv_path}")
+
+            # Next task
+            insert_data.delay()
+
+        except Exception as e:
+            logging.error(f"Error inserting data: {e}")
 
 
 @shared_task
@@ -284,8 +360,8 @@ def insert_data():
                 if Wildfires.objects.filter(
                         latitude=row['latitude'],
                         longitude=row['longitude'],
-                        acq_date=row['acq_date'],
-                        acq_time=row['acq_time']
+                        acq_datetime_gmt_3=row['acq_datetime_gmt_3'],
+                        frp=row['frp']
                         ) .exists():
                     continue
 
@@ -304,8 +380,9 @@ def insert_data():
                     bright_t31=row['bright_t31'],
                     frp=row['frp'],
                     daynight=row['daynight'],
-                    # type
-                    comuna=row['comuna']
+                    ftype=row['ftype'],
+                    comuna=row['comuna'],
+                    acq_datetime_gmt_3=row['acq_datetime_gmt_3']
                 )
                 wildfires_list.append(wildfire)
 
