@@ -14,6 +14,8 @@ from shapely.geometry import Point
 from api.celery import app
 import xgboost as xgb
 import numpy as np
+from django.utils import timezone
+
 
 @app.task
 def get_data():
@@ -236,12 +238,12 @@ def merge_data():
             minutes = value % 100
             return pd.Timedelta(hours=hours, minutes=minutes)
 
-        merged_data['acq_datetime_gmt_3'] = \
-            pd.to_datetime(merged_data['acq_date']) \
-            + merged_data['acq_time'].apply(parse_time)
+        #merged_data['acq_datetime_gmt_3'] = \
+        #    pd.to_datetime(merged_data['acq_date']) \
+        #    + merged_data['acq_time'].apply(parse_time)
 
-        merged_data['acq_datetime_gmt_3'] = \
-            merged_data['acq_datetime_gmt_3'] - pd.Timedelta(hours=3)
+        #merged_data['acq_datetime_gmt_3'] = \
+        #    merged_data['acq_datetime_gmt_3'] - pd.Timedelta(hours=3)
 
         # Save to csv
         csv_filename = os.path.join(output_directory, "dump.csv")
@@ -360,7 +362,9 @@ def insert_data():
                 if Wildfires.objects.filter(
                         latitude=row['latitude'],
                         longitude=row['longitude'],
-                        acq_datetime_gmt_3=row['acq_datetime_gmt_3'],
+                        acq_date=row['acq_date'],
+                        acq_time=row['acq_time'],
+                        #acq_datetime_gmt_3=row['acq_datetime_gmt_3'],
                         frp=row['frp']
                         ) .exists():
                     continue
@@ -382,7 +386,7 @@ def insert_data():
                     daynight=row['daynight'],
                     ftype=row['ftype'],
                     comuna=row['comuna'],
-                    acq_datetime_gmt_3=row['acq_datetime_gmt_3']
+                    #acq_datetime_gmt_3=row['acq_datetime_gmt_3']
                 )
                 wildfires_list.append(wildfire)
 
