@@ -14,7 +14,6 @@ from shapely.geometry import Point
 from api.celery import app
 import xgboost as xgb
 import numpy as np
-from django.utils import timezone
 
 
 @app.task
@@ -28,6 +27,11 @@ def get_data():
     logging.basicConfig(filename=log_file,
                         encoding='utf-8', level=logging.INFO)
 
+    # Check if there is any data in the database Wildfires
+    if Wildfires.objects.count() == 0:
+        logging.info("No data found, waiting for populate the database.")
+        return
+
     # Get Data
     try:
         # NASA API
@@ -36,9 +40,8 @@ def get_data():
         # - timedelta(days=1)
         current_date = datetime.now().strftime('%Y-%m-%d')
 
-        if Wildfires.objects.count() > 0:
-            max_date = Wildfires.objects.latest('acq_date').acq_date
-            current_date = max_date.strftime('%Y-%m-%d')
+        max_date = Wildfires.objects.latest('acq_date').acq_date
+        current_date = max_date.strftime('%Y-%m-%d')
 
         logging.info(
             "Requesting data with the following"
@@ -124,7 +127,7 @@ def merge_data():
             for i in range(3):
                 csv_filename = os.path.join(output_directory, f"dump_{i}.csv")
                 df = pd.read_csv(csv_filename)
-                logging.info(f"New Data Size {df.shape}")
+                logging.info(f"New data of size {df.shape}")
 
                 # Drop country CL
                 if 'country_id' in df.columns:
@@ -238,13 +241,6 @@ def merge_data():
             minutes = value % 100
             return pd.Timedelta(hours=hours, minutes=minutes)
 
-        #merged_data['acq_datetime_gmt_3'] = \
-        #    pd.to_datetime(merged_data['acq_date']) \
-        #    + merged_data['acq_time'].apply(parse_time)
-
-        #merged_data['acq_datetime_gmt_3'] = \
-        #    merged_data['acq_datetime_gmt_3'] - pd.Timedelta(hours=3)
-
         # Save to csv
         csv_filename = os.path.join(output_directory, "dump.csv")
         merged_data.to_csv(csv_filename, index=False)
@@ -264,27 +260,28 @@ def merge_data():
 
 @shared_task
 def classify_data():
-    # Insert data in PostgreSQL
     BASE_DIR = settings.BASE_DIR
 
-    # Get new data path
     csv_path = os.path.join(BASE_DIR, 'dump/dump.csv')
 
-    # Read if there is a file dalled dump.csv
-    # and insert data into the database of Wildfires
     with open(csv_path, 'r') as f:
         try:
             df = pd.read_csv(f)
-
             logging.info(f"Rows to process {df.shape[0]}")
 
+            df['acq_date'] = pd.to_datetime(
+                    df['acq_date']).astype('datetime64[us]')
+
+            # Filter out existing points before processing
             for index, row in df.iterrows():
                 if Wildfires.objects.filter(
                         latitude=row['latitude'],
                         longitude=row['longitude'],
                         acq_date=row['acq_date'],
-                        acq_time=row['acq_time']
-                        ) .exists():
+                        acq_time=row['acq_time'],
+                        frp=row['frp'],
+                        track=row['track']
+                        ).exists():
                     # Remove row from df
                     df.drop(index, inplace=True)
                     continue
@@ -304,24 +301,34 @@ def classify_data():
                     'latitude', 'longitude'
                     ]
 
-            # Categorical cols to numeric
-            if 'daynight' in df.columns:
-                df['daynight'] = df['daynight'].apply(
-                        lambda x: 1 if x != 'D' else 0)
-                df['daynight'] = df['daynight'].astype(int)
+            df_predictions = df[features].copy()
 
-            if 'confidence' in df.columns:
-                df['confidence'] = df['confidence'].apply(
+            # Categorical cols to numeric
+            if 'daynight' in df_predictions.columns:
+                df_predictions['daynight'] = \
+                        df_predictions['daynight'].apply(
+                            lambda x: 1 if x != 'D' else 0)
+                df_predictions['daynight'] = \
+                    df_predictions['daynight'].astype(int)
+
+            if 'confidence' in df_predictions.columns:
+                df_predictions['confidence'] = \
+                    df_predictions['confidence'].apply(
                         lambda x: 0 if x == 'l' else 1
                         if x == 'n' else 2 if x == 'h' else 3)
-                df['confidence'] = df['confidence'].astype(int)
+                df_predictions['confidence'] = \
+                    df_predictions['confidence'].astype(int)
 
-            preds = model.predict(df[features])
+            preds = model.predict(df_predictions)
             preds = np.where(preds > 0.5, 1, 0)
+
             df['ftype'] = preds
 
             # Filter non-wildfire data
-            df = df[df['ftype'] != 0]
+            logging.info(f"Non-wildfires rows: {preds[preds == 1].shape[0]}")
+
+            # Wildfire data
+            logging.info(f"Wildfires rows: {preds[preds == 0].shape[0]}")
 
             # Save to replace old dump.csv
             df.to_csv(csv_path, index=False)
@@ -348,8 +355,9 @@ def insert_data():
     with open(csv_path, 'r') as f:
         try:
             df = pd.read_csv(f)
-
-            logging.info(f"Rows to insert {df.shape[0]}")
+            df['acq_date'] = pd.to_datetime(
+                    df['acq_date']).astype('datetime64[us]')
+            logging.info(f"Rows to insert: {df.shape[0]}")
 
             if df.shape[0] == 0:
                 logging.info("No new data to insert.")
@@ -358,17 +366,6 @@ def insert_data():
             wildfires_list = []
 
             for index, row in df.iterrows():
-
-                if Wildfires.objects.filter(
-                        latitude=row['latitude'],
-                        longitude=row['longitude'],
-                        acq_date=row['acq_date'],
-                        acq_time=row['acq_time'],
-                        #acq_datetime_gmt_3=row['acq_datetime_gmt_3'],
-                        frp=row['frp']
-                        ) .exists():
-                    continue
-
                 wildfire = Wildfires(
                     latitude=row['latitude'],
                     longitude=row['longitude'],
@@ -386,11 +383,10 @@ def insert_data():
                     daynight=row['daynight'],
                     ftype=row['ftype'],
                     comuna=row['comuna'],
-                    #acq_datetime_gmt_3=row['acq_datetime_gmt_3']
                 )
                 wildfires_list.append(wildfire)
 
-            logging.info(f"Rows to insert after filtering"
+            logging.info(f"Rows to insert after filtering: "
                          f"{len(wildfires_list)}")
             Wildfires.objects.bulk_create(wildfires_list)
             success = True

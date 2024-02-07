@@ -1,22 +1,15 @@
 import pandas as pd
 from wildfiresapi.models import Wildfires
-from django.conf import settings
-from django.utils import timezone
 
 
 def create_wildfire_object(row):
-
-    #aware_datetime = timezone.make_aware(
-    #        row['acq_datetime_gmt_3'],
-    #        timezone=timezone.get_current_timezone())
-
     return Wildfires(
         latitude=row['latitude'],
         longitude=row['longitude'],
         brightness=row['brightness'],
         scan=row['scan'],
         track=row['track'],
-        acq_date=row['acq_date'].date(),
+        acq_date=row['acq_date'],
         acq_time=row['acq_time'],
         satellite=row['satellite'],
         instrument=row['instrument'],
@@ -27,24 +20,23 @@ def create_wildfire_object(row):
         daynight=row['daynight'],
         ftype=row['type'],
         comuna=row['comuna'],
-        #acq_datetime_gmt_3=row['acq_datetime_gmt_3'],
     )
 
-
-# Delete all wildfires
-Wildfires.objects.all().delete()
 
 if Wildfires.objects.all().exists():
     print("Data already populated.")
 else:
     try:
-        # Fill with data from parquet file
-        parquet_file_path = 'fires_merged_comunas_timezone.parquet'
+        print("Populating data...")
+        parquet_file_path = 'fires_merged_comunas.parquet'
         df = pd.read_parquet(parquet_file_path)
 
-        df['acq_date'] = pd.to_datetime(df['acq_date'])
-        #df['acq_datetime_gmt_3'] = pd.to_datetime(df['acq_datetime_gmt_3'])
+        df['acq_date'] = pd.to_datetime(
+                df['acq_date']).astype('datetime64[us]')
+
         df['type'] = df['type'].fillna(-1)
+
+        print(df.info())
 
         batch_size = 100  # For low memory usag
 

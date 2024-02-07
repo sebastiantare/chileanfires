@@ -23,8 +23,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN')
 NASA_FIRMS_TOKEN = os.environ.get('NASA_FIRMS_TOKEN')
-TIME_ZONE = os.environ.get('TIME_ZONE', 'America/Santiago')
-USE_TZ = True
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 # Application definition
@@ -61,6 +59,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://0.0.0.0:1234",
     "http://127.0.0.1:8000",
     "http://127.0.0.1:1234",
+    "http://localhost:3000",
 ]
 
 ROOT_URLCONF = "api.urls"

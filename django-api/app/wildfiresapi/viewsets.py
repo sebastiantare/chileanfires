@@ -1,5 +1,5 @@
 # wildfiresapi/viewsets.py
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, status
 from django.db.models import Max, Count
 from . import models
 from . import serializers
@@ -9,6 +9,7 @@ from django.db.models.functions import TruncDate, TruncMonth
 from django_ratelimit.decorators import ratelimit
 from django.db import connection
 from django.utils.decorators import method_decorator
+from rest_framework.response import Response
 
 
 @method_decorator(ratelimit(key='user', rate='10/m', block=True),
@@ -22,7 +23,10 @@ class WildfiresViewset(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         max_acq_date = models.Wildfires.objects.all().aggregate(
             Max('acq_date'))['acq_date__max']
-        queryset = models.Wildfires.objects.filter(acq_date=max_acq_date)
+        queryset = models.Wildfires.objects.filter(
+                acq_date=max_acq_date,
+                ftype=0
+                )
         return queryset
 
 
@@ -30,20 +34,22 @@ class WildfiresViewset(viewsets.ReadOnlyModelViewSet):
                   name='dispatch')
 class WildfiresByDateViewset(viewsets.ReadOnlyModelViewSet):
     """
-        Returns wildfires by Chilean date (GMT-3).
+        Returns wildfires by GMT Date.
     """
     serializer_class = serializers.WildfiresSerializer
 
     def get_queryset(self):
-        date = self.kwargs['date']
-        date = datetime.strptime(date, '%Y-%m-%d').date()
+        date_param = self.request.query_params.get('date', None)
+        date_param = datetime.strptime(date_param, '%Y-%m-%d').date()
+        print(date_param)
 
-        # Get all the records that match the date using the datetime field
-        # acq_datetime_gmt_3
-        queryset = models.Wildfires.objects.filter(
-            acq_datetime_gmt_3__date=date)
-
-        return queryset
+        if date_param is not None:
+            queryset = models.Wildfires.objects.filter(
+                acq_date=date_param,
+                ftype=0
+                )
+            return queryset
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 @method_decorator(ratelimit(key='user', rate='10/m', block=True),
@@ -56,13 +62,15 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         last_year = datetime.now().year - 1
+        print(last_year)
 
         raw_sql = """
             SELECT
-                EXTRACT(MONTH FROM acq_datetime_gmt_3) AS month,
+                EXTRACT(MONTH FROM acq_date) AS month,
                 COUNT(id) AS fire_count
             FROM wildfiresapi_wildfires
-            WHERE EXTRACT(YEAR FROM acq_datetime_gmt_3) = %s
+            WHERE EXTRACT(YEAR FROM acq_date) = %s
+            AND ftype = 0
             GROUP BY month
             ORDER BY month
         """

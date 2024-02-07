@@ -19,7 +19,6 @@ class Wildfires(models.Model):
     daynight = models.CharField(max_length=255)
     ftype = models.FloatField(null=True, blank=True)
     comuna = models.CharField(max_length=255, null=True, blank=True)
-    #acq_datetime_gmt_3 = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Wildfire at" \
