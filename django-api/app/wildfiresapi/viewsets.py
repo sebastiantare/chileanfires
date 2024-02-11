@@ -70,7 +70,6 @@ class WildfiresViewset12Months(viewsets.ReadOnlyModelViewSet):
                 COUNT(id) AS fire_count
             FROM wildfiresapi_wildfires
             WHERE EXTRACT(YEAR FROM acq_date) = %s
-            AND ftype = 0
             GROUP BY month
             ORDER BY month
         """

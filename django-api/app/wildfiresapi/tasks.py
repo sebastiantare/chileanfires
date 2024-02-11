@@ -303,7 +303,6 @@ def classify_data():
 
             df_predictions = df[features].copy()
 
-            # Categorical cols to numeric
             if 'daynight' in df_predictions.columns:
                 df_predictions['daynight'] = \
                         df_predictions['daynight'].apply(
