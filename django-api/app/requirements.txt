@@ -47,3 +47,4 @@ fastjsonschema==2.19.1
 rtree
 xgboost
 scikit-learn
+Pillow

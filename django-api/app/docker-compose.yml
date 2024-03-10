@@ -6,20 +6,17 @@ services:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
     image: wildfires_web
-    # '/start' is the shell script used to run the service
     command: /start
-    # this volume is used to map the files and folders on the host to the container
-    # so if we change code on the host, code in the docker container will also be changed
     volumes:
       - .:/app
     ports:
       - 8000:8000
-    # env_file is used to manage the env variables of our project
     env_file:
       - ./.env/.dev-sample
     depends_on:
       - redis
       - db
+      - rabbit
 
   db:
     image: postgres:14-alpine
@@ -29,6 +26,16 @@ services:
       - POSTGRES_DB=wildfiresDB
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:3.6.9
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
   redis:
     image: redis:7-alpine
@@ -46,6 +53,7 @@ services:
     depends_on:
       - redis
       - db
+      - rabbit
 
   celery_beat:
     build:
@@ -60,6 +68,7 @@ services:
     depends_on:
       - redis
       - db
+      - rabbit
 
   flower:
     build:
@@ -76,7 +85,7 @@ services:
     depends_on:
       - redis
       - db
+      - rabbit
 
 volumes:
   postgres_data:
-
